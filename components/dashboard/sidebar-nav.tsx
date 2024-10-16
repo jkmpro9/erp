@@ -16,48 +16,61 @@ import {
   LogOut
 } from "lucide-react"
 
-const sidebarNavItems = [
-  {
-    title: "Tableau de bord",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Clients",
-    href: "/dashboard/clients",
-    icon: Users,
-  },
-  {
-    title: "Factures",
-    href: "/dashboard/invoices",
-    icon: FileText,
-  },
-  {
-    title: "Colis",
-    href: "/dashboard/packages",
-    icon: Package,
-  },
-  {
-    title: "Paiements",
-    href: "/dashboard/payments",
-    icon: CreditCard,
-  },
-  {
-    title: "Transactions",
-    href: "/dashboard/transactions",
-    icon: RefreshCcw,
-  },
-  {
-    title: "Paramètres",
-    href: "/dashboard/settings",
-    icon: Settings,
-  },
-]
+interface Translations {
+  dashboard: string;
+  clients: string;
+  invoices: string;
+  packages: string;
+  payments: string;
+  transactions: string;
+  settings: string;
+  logout: string;
+}
 
-interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {}
+interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
+  translations: Translations;
+}
 
-export function SidebarNav({ className, ...props }: SidebarNavProps) {
+export function SidebarNav({ className, translations, ...props }: SidebarNavProps) {
   const pathname = usePathname()
+
+  const sidebarNavItems = [
+    {
+      title: translations.dashboard,
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      title: translations.clients,
+      href: "/dashboard/clients",
+      icon: Users,
+    },
+    {
+      title: translations.invoices,
+      href: "/dashboard/invoices",
+      icon: FileText,
+    },
+    {
+      title: translations.packages,
+      href: "/dashboard/packages",
+      icon: Package,
+    },
+    {
+      title: translations.payments,
+      href: "/dashboard/payments",
+      icon: CreditCard,
+    },
+    {
+      title: translations.transactions,
+      href: "/dashboard/transactions",
+      icon: RefreshCcw,
+    },
+    {
+      title: translations.settings,
+      href: "/dashboard/settings",
+      icon: Settings,
+    },
+  ]
 
   return (
     <div className={cn("pb-12 bg-secondary", className)} {...props}>
@@ -89,7 +102,7 @@ export function SidebarNav({ className, ...props }: SidebarNavProps) {
       <div className="px-3 py-2">
         <Button variant="ghost" className="w-full justify-start text-secondary-foreground hover:bg-primary/10 hover:text-primary">
           <LogOut className="mr-2 h-4 w-4" />
-          Déconnexion
+          {translations.logout}
         </Button>
       </div>
     </div>
