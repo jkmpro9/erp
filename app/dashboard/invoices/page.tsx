@@ -20,7 +20,11 @@ interface Article {
 }
 
 interface Invoice {
+  id: string;
   clientName: string;
+  creationDate: string;
+  amount: number;
+  createdBy: string;
   clientPhone: string;
   clientAddress: string;
   deliveryLocation: string;
@@ -28,7 +32,6 @@ interface Invoice {
   items: Article[];
 }
 
-// Add this type definition
 interface Client {
   id: string;
   name: string;
@@ -37,7 +40,6 @@ interface Client {
   city: string;
 }
 
-// Add this dummy data (replace with actual API call in production)
 const clientList: Client[] = [
   { id: 'CL001', name: 'Acme Corp', phone: '123-456-7890', address: '123 Main St', city: 'New York' },
   { id: 'CL002', name: 'GlobalTech', phone: '098-765-4321', address: '456 Oak Ave', city: 'San Francisco' },
@@ -45,8 +47,12 @@ const clientList: Client[] = [
 ];
 
 export default function InvoicesPage() {
-  const [activeTab, setActiveTab] = useState<'create' | 'list'>('create');
-  const [newInvoice, setNewInvoice] = useState<Invoice>({
+  const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
+  const [invoices, setInvoices] = useState<Invoice[]>([
+    { id: 'INV001', clientName: 'Acme Corp', creationDate: '2023-06-01', amount: 5000, createdBy: 'John Doe', clientPhone: '123-456-7890', clientAddress: '123 Main St', deliveryLocation: 'New York', deliveryMethod: 'Air', items: [] },
+    { id: 'INV002', clientName: 'GlobalTech', creationDate: '2023-06-05', amount: 7500, createdBy: 'Jane Smith', clientPhone: '098-765-4321', clientAddress: '456 Oak Ave', deliveryLocation: 'San Francisco', deliveryMethod: 'Sea', items: [] },
+  ]);
+  const [newInvoice, setNewInvoice] = useState<Omit<Invoice, 'id' | 'creationDate' | 'amount' | 'createdBy'>>({
     clientName: '',
     clientPhone: '',
     clientAddress: '',
@@ -63,12 +69,6 @@ export default function InvoicesPage() {
     weightCbm: 0,
     itemLink: '',
   });
-
-  useEffect(() => {
-    // If you have an API, replace this with an API call to fetch clients
-    // For now, we'll use the dummy data
-    // setClients(fetchedClients);
-  }, []);
 
   const handleRemoveAllItems = () => {
     setNewInvoice({ ...newInvoice, items: [] });
@@ -112,6 +112,27 @@ export default function InvoicesPage() {
     setNewInvoice({ ...newInvoice, [name]: value });
   };
 
+  const handleCreateInvoice = () => {
+    const newId = `INV${(invoices.length + 1).toString().padStart(3, '0')}`;
+    const amount = newInvoice.items.reduce((total, item) => total + item.quantity * item.unitPrice, 0);
+    const newInvoiceWithId: Invoice = {
+      ...newInvoice,
+      id: newId,
+      creationDate: new Date().toISOString().split('T')[0],
+      amount,
+      createdBy: 'Current User', // Replace with actual logged-in user
+    };
+    setInvoices([...invoices, newInvoiceWithId]);
+    setNewInvoice({
+      clientName: '',
+      clientPhone: '',
+      clientAddress: '',
+      deliveryLocation: '',
+      deliveryMethod: '',
+      items: []
+    });
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Invoice Management</h1>
@@ -123,18 +144,18 @@ export default function InvoicesPage() {
             <CardContent className="p-4">
               <nav className="space-y-2">
                 <Button
-                  variant={activeTab === 'create' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => setActiveTab('create')}
-                >
-                  Create Invoice
-                </Button>
-                <Button
                   variant={activeTab === 'list' ? 'default' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => setActiveTab('list')}
                 >
                   Invoice List
+                </Button>
+                <Button
+                  variant={activeTab === 'create' ? 'default' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('create')}
+                >
+                  Create Invoice
                 </Button>
               </nav>
             </CardContent>
@@ -143,6 +164,38 @@ export default function InvoicesPage() {
 
         {/* Main content area */}
         <div className="flex-1">
+          {activeTab === 'list' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Invoice List</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Invoice ID</TableHead>
+                      <TableHead>Customer Name</TableHead>
+                      <TableHead>Date of Creation</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Created By</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoices.map((invoice) => (
+                      <TableRow key={invoice.id}>
+                        <TableCell>{invoice.id}</TableCell>
+                        <TableCell>{invoice.clientName}</TableCell>
+                        <TableCell>{invoice.creationDate}</TableCell>
+                        <TableCell>${invoice.amount.toFixed(2)}</TableCell>
+                        <TableCell>{invoice.createdBy}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
           {activeTab === 'create' && (
             <Card>
               <CardHeader>
@@ -198,7 +251,6 @@ export default function InvoicesPage() {
                           <SelectContent>
                             <SelectItem value="lubumbashi">Lubumbashi</SelectItem>
                             <SelectItem value="kinshasa">Kinshasa</SelectItem>
-                            {/* Add more locations as needed */}
                           </SelectContent>
                         </Select>
                       </div>
@@ -321,20 +373,8 @@ export default function InvoicesPage() {
                     {/* Add conditions section here */}
                   </div>
 
-                  <Button onClick={() => console.log("Create Invoice", newInvoice)}>Create Invoice</Button>
+                  <Button onClick={handleCreateInvoice}>Create Invoice</Button>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {activeTab === 'list' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Invoice List</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* Add invoice list table here */}
-                <p>Invoice list content goes here...</p>
               </CardContent>
             </Card>
           )}

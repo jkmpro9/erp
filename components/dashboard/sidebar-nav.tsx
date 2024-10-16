@@ -60,10 +60,10 @@ export function SidebarNav({ className, ...props }: SidebarNavProps) {
   const pathname = usePathname()
 
   return (
-    <div className={cn("pb-12", className)} {...props}>
+    <div className={cn("pb-12 bg-secondary", className)} {...props}>
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-primary">
             CoBill CRM
           </h2>
           <div className="space-y-1">
@@ -71,7 +71,10 @@ export function SidebarNav({ className, ...props }: SidebarNavProps) {
               <Button
                 key={item.href}
                 variant={pathname === item.href ? "secondary" : "ghost"}
-                className="w-full justify-start"
+                className={cn(
+                  "w-full justify-start",
+                  pathname === item.href ? "bg-primary text-primary-foreground" : "text-secondary-foreground hover:bg-primary/10 hover:text-primary"
+                )}
                 asChild
               >
                 <Link href={item.href}>
@@ -84,7 +87,7 @@ export function SidebarNav({ className, ...props }: SidebarNavProps) {
         </div>
       </div>
       <div className="px-3 py-2">
-        <Button variant="ghost" className="w-full justify-start text-red-500">
+        <Button variant="ghost" className="w-full justify-start text-secondary-foreground hover:bg-primary/10 hover:text-primary">
           <LogOut className="mr-2 h-4 w-4" />
           Logout
         </Button>

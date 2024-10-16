@@ -8,11 +8,11 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="w-64 border-r bg-gray-100/40 dark:bg-gray-800/40">
+      <aside className="w-64 border-r border-border">
         <SidebarNav />
       </aside>
       <div className="flex-1">
-        <header className="border-b">
+        <header className="border-b border-border">
           <div className="flex h-16 items-center px-4">
             <div className="ml-auto flex items-center space-x-4">
               <UserNav />
