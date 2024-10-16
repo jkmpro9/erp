@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -23,14 +23,34 @@ interface Article {
 
 interface Invoice {
   clientName: string;
+  clientPhone: string;
+  clientAddress: string;
   deliveryLocation: string;
   deliveryMethod: string;
   items: Article[];
 }
 
+// Add this type definition
+interface Client {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  city: string;
+}
+
+// Add this dummy data (replace with actual API call in production)
+const clientList: Client[] = [
+  { id: 'CL001', name: 'Acme Corp', phone: '123-456-7890', address: '123 Main St', city: 'New York' },
+  { id: 'CL002', name: 'GlobalTech', phone: '098-765-4321', address: '456 Oak Ave', city: 'San Francisco' },
+  { id: 'CL003', name: 'InnovateNow', phone: '555-123-4567', address: '789 Pine Rd', city: 'Chicago' },
+];
+
 export default function InvoicesPage() {
   const [newInvoice, setNewInvoice] = useState<Invoice>({
     clientName: '',
+    clientPhone: '',
+    clientAddress: '',
     deliveryLocation: '',
     deliveryMethod: '',
     items: []
@@ -44,6 +64,12 @@ export default function InvoicesPage() {
     weightCbm: 0,
     itemLink: '',
   });
+
+  useEffect(() => {
+    // If you have an API, replace this with an API call to fetch clients
+    // For now, we'll use the dummy data
+    // setClients(fetchedClients);
+  }, []);
 
   const handleRemoveAllItems = () => {
     setNewInvoice({ ...newInvoice, items: [] });
@@ -68,6 +94,18 @@ export default function InvoicesPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setNewArticle({ ...newArticle, [name]: value });
+  };
+
+  const handleClientSelect = (clientName: string) => {
+    const selectedClient = clientList.find(client => client.name === clientName);
+    if (selectedClient) {
+      setNewInvoice({
+        ...newInvoice,
+        clientName: selectedClient.name,
+        clientPhone: selectedClient.phone,
+        clientAddress: selectedClient.address,
+      });
+    }
   };
 
   const handleClientInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -98,12 +136,37 @@ export default function InvoicesPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="clientName">Client Name</Label>
+                      <Select onValueChange={handleClientSelect}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select client" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {clientList.map((client) => (
+                            <SelectItem key={client.id} value={client.name}>
+                              {client.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="clientPhone">Client Phone</Label>
                       <Input
-                        id="clientName"
-                        name="clientName"
-                        value={newInvoice.clientName}
-                        onChange={handleClientInfoChange}
-                        placeholder="Enter client name"
+                        id="clientPhone"
+                        value={newInvoice.clientPhone}
+                        onChange={(e) => setNewInvoice({ ...newInvoice, clientPhone: e.target.value })}
+                        placeholder="Client phone"
+                        readOnly
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="clientAddress">Client Address</Label>
+                      <Input
+                        id="clientAddress"
+                        value={newInvoice.clientAddress}
+                        onChange={(e) => setNewInvoice({ ...newInvoice, clientAddress: e.target.value })}
+                        placeholder="Client address"
+                        readOnly
                       />
                     </div>
                     <div>
