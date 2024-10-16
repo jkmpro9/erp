@@ -11,6 +11,8 @@ import {
   FileText, 
   Package, 
   Settings,
+  CreditCard,
+  RefreshCcw,
   LogOut
 } from "lucide-react"
 
@@ -34,6 +36,16 @@ const sidebarNavItems = [
     title: "Packages",
     href: "/dashboard/packages",
     icon: Package,
+  },
+  {
+    title: "Payments",
+    href: "/dashboard/payments",
+    icon: CreditCard,
+  },
+  {
+    title: "Transactions",
+    href: "/dashboard/transactions",
+    icon: RefreshCcw,
   },
   {
     title: "Settings",
