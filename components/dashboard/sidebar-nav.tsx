@@ -18,7 +18,7 @@ import {
 
 const sidebarNavItems = [
   {
-    title: "Dashboard",
+    title: "Tableau de bord",
     href: "/dashboard",
     icon: LayoutDashboard,
   },
@@ -28,17 +28,17 @@ const sidebarNavItems = [
     icon: Users,
   },
   {
-    title: "Invoices",
+    title: "Factures",
     href: "/dashboard/invoices",
     icon: FileText,
   },
   {
-    title: "Packages",
+    title: "Colis",
     href: "/dashboard/packages",
     icon: Package,
   },
   {
-    title: "Payments",
+    title: "Paiements",
     href: "/dashboard/payments",
     icon: CreditCard,
   },
@@ -48,7 +48,7 @@ const sidebarNavItems = [
     icon: RefreshCcw,
   },
   {
-    title: "Settings",
+    title: "Paramètres",
     href: "/dashboard/settings",
     icon: Settings,
   },
@@ -89,7 +89,7 @@ export function SidebarNav({ className, ...props }: SidebarNavProps) {
       <div className="px-3 py-2">
         <Button variant="ghost" className="w-full justify-start text-secondary-foreground hover:bg-primary/10 hover:text-primary">
           <LogOut className="mr-2 h-4 w-4" />
-          Logout
+          Déconnexion
         </Button>
       </div>
     </div>

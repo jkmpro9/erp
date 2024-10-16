@@ -49,8 +49,8 @@ const clientList: Client[] = [
 export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
   const [invoices, setInvoices] = useState<Invoice[]>([
-    { id: 'INV001', clientName: 'Acme Corp', creationDate: '2023-06-01', amount: 5000, createdBy: 'John Doe', clientPhone: '123-456-7890', clientAddress: '123 Main St', deliveryLocation: 'New York', deliveryMethod: 'Air', items: [] },
-    { id: 'INV002', clientName: 'GlobalTech', creationDate: '2023-06-05', amount: 7500, createdBy: 'Jane Smith', clientPhone: '098-765-4321', clientAddress: '456 Oak Ave', deliveryLocation: 'San Francisco', deliveryMethod: 'Sea', items: [] },
+    { id: 'FAC001', clientName: 'Acme Corp', creationDate: '2023-06-01', amount: 5000, createdBy: 'John Doe', clientPhone: '123-456-7890', clientAddress: '123 Main St', deliveryLocation: 'New York', deliveryMethod: 'Air', items: [] },
+    { id: 'FAC002', clientName: 'GlobalTech', creationDate: '2023-06-05', amount: 7500, createdBy: 'Jane Smith', clientPhone: '098-765-4321', clientAddress: '456 Oak Ave', deliveryLocation: 'San Francisco', deliveryMethod: 'Sea', items: [] },
   ]);
   const [newInvoice, setNewInvoice] = useState<Omit<Invoice, 'id' | 'creationDate' | 'amount' | 'createdBy'>>({
     clientName: '',
@@ -113,7 +113,7 @@ export default function InvoicesPage() {
   };
 
   const handleCreateInvoice = () => {
-    const newId = `INV${(invoices.length + 1).toString().padStart(3, '0')}`;
+    const newId = `FAC${(invoices.length + 1).toString().padStart(3, '0')}`;
     const amount = newInvoice.items.reduce((total, item) => total + item.quantity * item.unitPrice, 0);
     const newInvoiceWithId: Invoice = {
       ...newInvoice,
@@ -135,7 +135,7 @@ export default function InvoicesPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Invoice Management</h1>
+      <h1 className="text-2xl font-bold mb-4">Gestion des Factures</h1>
       
       <div className="flex">
         {/* Left sidebar */}
@@ -148,14 +148,14 @@ export default function InvoicesPage() {
                   className="w-full justify-start"
                   onClick={() => setActiveTab('list')}
                 >
-                  Invoice List
+                  Liste des Factures
                 </Button>
                 <Button
                   variant={activeTab === 'create' ? 'default' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => setActiveTab('create')}
                 >
-                  Create Invoice
+                  Créer une Facture
                 </Button>
               </nav>
             </CardContent>
@@ -167,17 +167,17 @@ export default function InvoicesPage() {
           {activeTab === 'list' && (
             <Card>
               <CardHeader>
-                <CardTitle>Invoice List</CardTitle>
+                <CardTitle>Liste des Factures</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Invoice ID</TableHead>
-                      <TableHead>Customer Name</TableHead>
-                      <TableHead>Date of Creation</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Created By</TableHead>
+                      <TableHead>ID Facture</TableHead>
+                      <TableHead>Nom du Client</TableHead>
+                      <TableHead>Date de Création</TableHead>
+                      <TableHead>Montant</TableHead>
+                      <TableHead>Créé Par</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -186,7 +186,7 @@ export default function InvoicesPage() {
                         <TableCell>{invoice.id}</TableCell>
                         <TableCell>{invoice.clientName}</TableCell>
                         <TableCell>{invoice.creationDate}</TableCell>
-                        <TableCell>${invoice.amount.toFixed(2)}</TableCell>
+                        <TableCell>{invoice.amount.toFixed(2)} €</TableCell>
                         <TableCell>{invoice.createdBy}</TableCell>
                       </TableRow>
                     ))}
@@ -199,19 +199,19 @@ export default function InvoicesPage() {
           {activeTab === 'create' && (
             <Card>
               <CardHeader>
-                <CardTitle>Create New Invoice</CardTitle>
+                <CardTitle>Créer une Nouvelle Facture</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
                   {/* Client Information */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Client Information</h3>
+                    <h3 className="text-lg font-semibold mb-2">Informations du Client</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="clientName">Client Name</Label>
+                        <Label htmlFor="clientName">Nom du Client</Label>
                         <Select onValueChange={handleClientSelect}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select client" />
+                            <SelectValue placeholder="Sélectionner un client" />
                           </SelectTrigger>
                           <SelectContent>
                             {clientList.map((client) => (
@@ -223,30 +223,30 @@ export default function InvoicesPage() {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="clientPhone">Client Phone</Label>
+                        <Label htmlFor="clientPhone">Téléphone du Client</Label>
                         <Input
                           id="clientPhone"
                           value={newInvoice.clientPhone}
                           onChange={(e) => setNewInvoice({ ...newInvoice, clientPhone: e.target.value })}
-                          placeholder="Client phone"
+                          placeholder="Téléphone du client"
                           readOnly
                         />
                       </div>
                       <div>
-                        <Label htmlFor="clientAddress">Client Address</Label>
+                        <Label htmlFor="clientAddress">Adresse du Client</Label>
                         <Input
                           id="clientAddress"
                           value={newInvoice.clientAddress}
                           onChange={(e) => setNewInvoice({ ...newInvoice, clientAddress: e.target.value })}
-                          placeholder="Client address"
+                          placeholder="Adresse du client"
                           readOnly
                         />
                       </div>
                       <div>
-                        <Label htmlFor="deliveryLocation">Delivery Location</Label>
+                        <Label htmlFor="deliveryLocation">Lieu de Livraison</Label>
                         <Select name="deliveryLocation" onValueChange={(value) => handleClientInfoChange({ target: { name: 'deliveryLocation', value } } as any)}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select delivery location" />
+                            <SelectValue placeholder="Sélectionner le lieu de livraison" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="lubumbashi">Lubumbashi</SelectItem>
@@ -255,14 +255,14 @@ export default function InvoicesPage() {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="deliveryMethod">Delivery Method</Label>
+                        <Label htmlFor="deliveryMethod">Méthode de Livraison</Label>
                         <Select name="deliveryMethod" onValueChange={(value) => handleClientInfoChange({ target: { name: 'deliveryMethod', value } } as any)}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select delivery method" />
+                            <SelectValue placeholder="Sélectionner la méthode de livraison" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="air">Air</SelectItem>
-                            <SelectItem value="sea">Sea</SelectItem>
+                            <SelectItem value="sea">Mer</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -273,18 +273,18 @@ export default function InvoicesPage() {
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Articles</h3>
                     <div className="flex justify-between mb-2">
-                      <Button variant="destructive" onClick={handleRemoveAllItems}>EFFACER TOUS LES ARTICLES</Button>
+                      <Button variant="destructive" onClick={handleRemoveAllItems}>Effacer tous les Articles</Button>
                       <Dialog open={isAddArticleOpen} onOpenChange={setIsAddArticleOpen}>
                         <DialogTrigger asChild>
-                          <Button variant="outline">AJOUTER UN ARTICLE</Button>
+                          <Button variant="outline">Ajouter un Article</Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Add New Article</DialogTitle>
+                            <DialogTitle>Ajouter un Nouveau Article</DialogTitle>
                           </DialogHeader>
                           <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="imageUrl" className="text-right">Image URL</Label>
+                              <Label htmlFor="imageUrl" className="text-right">URL de l'Image</Label>
                               <Input id="imageUrl" name="imageUrl" value={newArticle.imageUrl} onChange={handleInputChange} className="col-span-3" />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
@@ -292,23 +292,23 @@ export default function InvoicesPage() {
                               <Input id="description" name="description" value={newArticle.description} onChange={handleInputChange} className="col-span-3" />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="quantity" className="text-right">Quantity</Label>
+                              <Label htmlFor="quantity" className="text-right">Quantité</Label>
                               <Input id="quantity" name="quantity" type="number" value={newArticle.quantity} onChange={handleInputChange} className="col-span-3" />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="unitPrice" className="text-right">Unit Price</Label>
+                              <Label htmlFor="unitPrice" className="text-right">Prix Unitaire</Label>
                               <Input id="unitPrice" name="unitPrice" type="number" value={newArticle.unitPrice} onChange={handleInputChange} className="col-span-3" />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="weightCbm" className="text-right">Weight/CBM</Label>
+                              <Label htmlFor="weightCbm" className="text-right">Poids/CBM</Label>
                               <Input id="weightCbm" name="weightCbm" type="number" value={newArticle.weightCbm} onChange={handleInputChange} className="col-span-3" />
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="itemLink" className="text-right">Item Link</Label>
+                              <Label htmlFor="itemLink" className="text-right">Lien de l'Article</Label>
                               <Input id="itemLink" name="itemLink" value={newArticle.itemLink} onChange={handleInputChange} className="col-span-3" />
                             </div>
                           </div>
-                          <Button onClick={handleAddArticle}>Add Article</Button>
+                          <Button onClick={handleAddArticle}>Ajouter l'Article</Button>
                         </DialogContent>
                       </Dialog>
                     </div>
@@ -335,9 +335,9 @@ export default function InvoicesPage() {
                             </TableCell>
                             <TableCell>{item.quantity}</TableCell>
                             <TableCell>{item.description}</TableCell>
-                            <TableCell>${Number(item.unitPrice).toFixed(2)}</TableCell>
+                            <TableCell>{Number(item.unitPrice).toFixed(2)} €</TableCell>
                             <TableCell>{item.weightCbm}</TableCell>
-                            <TableCell>${(item.quantity * item.unitPrice).toFixed(2)}</TableCell>
+                            <TableCell>{item.quantity * item.unitPrice} €</TableCell>
                             <TableCell>
                               <Button variant="ghost" size="sm" asChild>
                                 <a href={item.itemLink} target="_blank" rel="noopener noreferrer">
@@ -363,17 +363,17 @@ export default function InvoicesPage() {
 
                   {/* Calculations */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Calculations</h3>
-                    {/* Add calculations section here */}
+                    <h3 className="text-lg font-semibold mb-2">Calculs</h3>
+                    {/* Ajouter la section des calculs ici */}
                   </div>
 
                   {/* Conditions */}
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Conditions</h3>
-                    {/* Add conditions section here */}
+                    {/* Ajouter la section des conditions ici */}
                   </div>
 
-                  <Button onClick={handleCreateInvoice}>Create Invoice</Button>
+                  <Button onClick={handleCreateInvoice}>Créer la Facture</Button>
                 </div>
               </CardContent>
             </Card>
