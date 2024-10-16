@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Menu, X } from 'lucide-react'
 
 // Create a context for language
 const LanguageContext = createContext<{
@@ -46,9 +47,14 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const [language, setLanguage] = useState<'fr' | 'en'>('fr')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const toggleLanguage = (lang: 'fr' | 'en') => {
     setLanguage(lang)
+  }
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed)
   }
 
   // Simple translation object
@@ -78,12 +84,15 @@ export default function DashboardLayout({
   return (
     <LanguageContext.Provider value={{ language, setLanguage }}>
       <div className="flex min-h-screen bg-background">
-        <aside className="w-64 border-r border-border">
-          <SidebarNav translations={translations[language]} />
+        <aside className={`border-r border-border transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
+          <SidebarNav translations={translations[language]} collapsed={sidebarCollapsed} />
         </aside>
         <div className="flex-1">
           <header className="border-b border-border">
             <div className="flex h-16 items-center px-4">
+              <Button variant="ghost" size="icon" onClick={toggleSidebar} className="mr-4">
+                {sidebarCollapsed ? <Menu className="h-6 w-6" /> : <X className="h-6 w-6" />}
+              </Button>
               <div className="ml-auto flex items-center space-x-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

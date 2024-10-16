@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Link, Pencil, Trash } from 'lucide-react';
+import { Textarea } from "@/components/ui/textarea"
 
 interface Article {
   imageUrl: string;
@@ -69,6 +70,28 @@ export default function InvoicesPage() {
     weightCbm: 0,
     itemLink: '',
   });
+
+  const [subtotal, setSubtotal] = useState(0);
+  const [fees, setFees] = useState(0);
+  const [transport, setTransport] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [totalQuantity, setTotalQuantity] = useState(0);
+  const [totalWeight, setTotalWeight] = useState(0);
+  const [feePercentage, setFeePercentage] = useState(10);
+
+  useEffect(() => {
+    const newSubtotal = newInvoice.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const newTotalQuantity = newInvoice.items.reduce((sum, item) => sum + item.quantity, 0);
+    const newTotalWeight = newInvoice.items.reduce((sum, item) => sum + item.weightCbm, 0);
+    const newFees = (newSubtotal * feePercentage) / 100;
+    const newTotal = newSubtotal + newFees + transport;
+
+    setSubtotal(newSubtotal);
+    setTotalQuantity(newTotalQuantity);
+    setTotalWeight(newTotalWeight);
+    setFees(newFees);
+    setTotal(newTotal);
+  }, [newInvoice.items, feePercentage, transport]);
 
   const handleRemoveAllItems = () => {
     setNewInvoice({ ...newInvoice, items: [] });
@@ -364,16 +387,66 @@ export default function InvoicesPage() {
                   {/* Calculations */}
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Calculs</h3>
-                    {/* Ajouter la section des calculs ici */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>SOUS-TOTAL</span>
+                        <span>${subtotal.toFixed(2)}</span>
+                      </div>
+                      <div>Quantité Totale: {totalQuantity} pcs</div>
+                      <div className="flex items-center">
+                        <span className="mr-2">FRAIS</span>
+                        <Select 
+                          value={feePercentage.toString()} 
+                          onValueChange={(value) => setFeePercentage(Number(value))}
+                        >
+                          <SelectTrigger className="w-[100px]">
+                            <SelectValue placeholder="Select %" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="5">5%</SelectItem>
+                            <SelectItem value="10">10%</SelectItem>
+                            <SelectItem value="15">15%</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <span className="ml-auto">${fees.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span>TRANSPORT & DOUANE ({newInvoice.deliveryMethod})</span>
+                        <Input 
+                          type="number" 
+                          value={transport} 
+                          onChange={(e) => setTransport(Number(e.target.value))}
+                          className="w-[100px] ml-auto"
+                        />
+                      </div>
+                      <div>Poids Total: {totalWeight.toFixed(2)} kg</div>
+                      <div className="flex justify-between font-bold">
+                        <span>TOTAL GENERAL</span>
+                        <span>${total.toFixed(2)}</span>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Conditions */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Conditions</h3>
-                    {/* Ajouter la section des conditions ici */}
+                    <h3 className="text-lg font-semibold mb-2">Conditions Générales</h3>
+                    <Textarea 
+                      placeholder="Entrez les conditions générales ici..."
+                      value="Délais de livraison : 10 -15 Jours selon le types de marchandises"
+                      rows={3}
+                    />
                   </div>
 
-                  <Button onClick={handleCreateInvoice}>Créer la Facture</Button>
+                  <div className="flex justify-between">
+                    <Button onClick={handleCreateInvoice}>Créer la Facture</Button>
+                    <Button variant="outline">Sauvegarder Facture</Button>
+                    <Button variant="secondary">Charger Facture</Button>
+                  </div>
+                  <div className="flex justify-center">
+                    <Button variant="outline" className="w-full">
+                      APERÇU ET TÉLÉCHARGER PDF
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
