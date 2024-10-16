@@ -6,12 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface UserSettings {
   username: string;
   email: string;
   notifications: boolean;
   darkMode: boolean;
+  role: 'admin' | 'team' | 'customer';
+  permissions: string[];
 }
 
 interface CompanySettings {
@@ -20,13 +24,22 @@ interface CompanySettings {
   taxId: string;
 }
 
+const availablePermissions = [
+  { id: 'create_invoice', label: 'Create Invoice' },
+  { id: 'view_clients', label: 'View Clients' },
+  { id: 'edit_settings', label: 'Edit Settings' },
+  { id: 'manage_users', label: 'Manage Users' },
+];
+
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'user' | 'company' | 'security'>('user');
+  const [activeTab, setActiveTab] = useState<'user' | 'company' | 'security' | 'roles'>('user');
   const [userSettings, setUserSettings] = useState<UserSettings>({
     username: 'johndoe',
     email: 'john@example.com',
     notifications: true,
     darkMode: false,
+    role: 'team',
+    permissions: ['create_invoice', 'view_clients'],
   });
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
     companyName: 'Acme Inc.',
@@ -47,6 +60,19 @@ export default function SettingsPage() {
     setCompanySettings(prev => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleRoleChange = (role: 'admin' | 'team' | 'customer') => {
+    setUserSettings(prev => ({ ...prev, role }));
+  };
+
+  const handlePermissionChange = (permissionId: string) => {
+    setUserSettings(prev => ({
+      ...prev,
+      permissions: prev.permissions.includes(permissionId)
+        ? prev.permissions.filter(id => id !== permissionId)
+        : [...prev.permissions, permissionId],
     }));
   };
 
@@ -80,6 +106,13 @@ export default function SettingsPage() {
                   onClick={() => setActiveTab('security')}
                 >
                   Security
+                </Button>
+                <Button
+                  variant={activeTab === 'roles' ? 'default' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('roles')}
+                >
+                  Roles & Permissions
                 </Button>
               </nav>
             </CardContent>
@@ -198,6 +231,52 @@ export default function SettingsPage() {
                     <Input id="confirmPassword" type="password" />
                   </div>
                   <Button onClick={() => console.log("Change Password")}>Change Password</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'roles' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Roles & Permissions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="role">User Role</Label>
+                    <Select onValueChange={handleRoleChange} value={userSettings.role}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="team">Team</SelectItem>
+                        <SelectItem value="customer">Customer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Permissions</Label>
+                    <div className="space-y-2">
+                      {availablePermissions.map((permission) => (
+                        <div key={permission.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={permission.id}
+                            checked={userSettings.permissions.includes(permission.id)}
+                            onCheckedChange={() => handlePermissionChange(permission.id)}
+                          />
+                          <label
+                            htmlFor={permission.id}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {permission.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <Button onClick={() => console.log("Save Roles & Permissions", userSettings)}>Save Roles & Permissions</Button>
                 </div>
               </CardContent>
             </Card>
