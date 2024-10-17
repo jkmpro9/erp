@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation'
+import localforage from '@/lib/localForage';
 
 const PDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFViewer), { ssr: false });
 const InvoicePDF = dynamic(() => import('@/components/InvoicePDF'), { ssr: false });
@@ -65,10 +66,7 @@ const clientList: Client[] = [
 export default function InvoicesPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'list' | 'create' | 'drafts'>('list');
-  const [invoices, setInvoices] = useState<Invoice[]>([
-    { id: 'FAC001', clientName: 'Acme Corp', creationDate: '2023-06-01', amount: 5000, createdBy: 'John Doe', clientPhone: '123-456-7890', clientAddress: '123 Main St', deliveryLocation: 'New York', deliveryMethod: 'Air', items: [], subtotal: 0, fees: 0, transport: 0, total: 0 },
-    { id: 'FAC002', clientName: 'GlobalTech', creationDate: '2023-06-05', amount: 7500, createdBy: 'Jane Smith', clientPhone: '098-765-4321', clientAddress: '456 Oak Ave', deliveryLocation: 'San Francisco', deliveryMethod: 'Sea', items: [], subtotal: 0, fees: 0, transport: 0, total: 0 },
-  ]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [newInvoice, setNewInvoice] = useState<Omit<Invoice, 'id' | 'creationDate' | 'amount' | 'createdBy'>>({
     clientName: '',
@@ -116,6 +114,22 @@ export default function InvoicesPage() {
                           (filterStatus === "unpaid" && invoice.amount === 0);
     return matchesSearch && matchesFilter;
   });
+
+  useEffect(() => {
+    const loadInvoices = async () => {
+      const storedInvoices = await localforage.getItem<Invoice[]>('invoices');
+      if (storedInvoices) {
+        setInvoices(storedInvoices);
+      }
+
+      const storedDrafts = await localforage.getItem<Draft[]>('drafts');
+      if (storedDrafts) {
+        setDrafts(storedDrafts);
+      }
+    };
+
+    loadInvoices();
+  }, []);
 
   const handlePreviewPDF = () => {
     const previewInvoice = createPreviewInvoice();
@@ -223,7 +237,7 @@ export default function InvoicesPage() {
     setNewInvoice({ ...newInvoice, [name]: value });
   };
 
-  const handleCreateInvoice = () => {
+  const handleCreateInvoice = async () => {
     const newId = `FAC${(invoices.length + 1).toString().padStart(3, '0')}`;
     const amount = newInvoice.items.reduce((total, item) => total + item.quantity * item.unitPrice, 0);
     const newInvoiceWithId: Invoice = {
@@ -233,7 +247,9 @@ export default function InvoicesPage() {
       amount,
       createdBy: 'Current User', // Replace with actual logged-in user
     };
-    setInvoices([...invoices, newInvoiceWithId]);
+    const updatedInvoices = [...invoices, newInvoiceWithId];
+    setInvoices(updatedInvoices);
+    await localforage.setItem('invoices', updatedInvoices);
     setNewInvoice({
       clientName: '',
       clientPhone: '',
@@ -272,13 +288,15 @@ export default function InvoicesPage() {
     setNewInvoice({ ...newInvoice, items: updatedItems });
   };
 
-  const handleCreateDraft = () => {
+  const handleCreateDraft = async () => {
     const newDraft: Draft = {
       ...newInvoice,
       id: `DRAFT${Date.now()}`,
       creationDate: new Date().toISOString().split('T')[0],
     };
-    setDrafts([...drafts, newDraft]);
+    const updatedDrafts = [...drafts, newDraft];
+    setDrafts(updatedDrafts);
+    await localforage.setItem('drafts', updatedDrafts);
     setNewInvoice({
       clientName: '',
       clientPhone: '',
@@ -298,11 +316,13 @@ export default function InvoicesPage() {
     setActiveTab('create');
   };
 
-  const handleDeleteDraft = (draftId: string) => {
-    setDrafts(drafts.filter(draft => draft.id !== draftId));
+  const handleDeleteDraft = async (draftId: string) => {
+    const updatedDrafts = drafts.filter(draft => draft.id !== draftId);
+    setDrafts(updatedDrafts);
+    await localforage.setItem('drafts', updatedDrafts);
   };
 
-  const handleConvertDraftToInvoice = (draft: Draft) => {
+  const handleConvertDraftToInvoice = async (draft: Draft) => {
     const newInvoice: Invoice = {
       ...draft,
       id: `FAC${(invoices.length + 1).toString().padStart(3, '0')}`,
@@ -313,8 +333,13 @@ export default function InvoicesPage() {
       transport: 0,
       total: 0
     };
-    setInvoices([...invoices, newInvoice]);
-    setDrafts(drafts.filter(d => d.id !== draft.id));
+    const updatedInvoices = [...invoices, newInvoice];
+    setInvoices(updatedInvoices);
+    await localforage.setItem('invoices', updatedInvoices);
+
+    const updatedDrafts = drafts.filter(d => d.id !== draft.id);
+    setDrafts(updatedDrafts);
+    await localforage.setItem('drafts', updatedDrafts);
   };
 
   const calculateTotal = (items: Article[]): number => {
@@ -403,7 +428,7 @@ export default function InvoicesPage() {
                         <TableCell>{invoice.id}</TableCell>
                         <TableCell>{invoice.clientName}</TableCell>
                         <TableCell>{invoice.creationDate}</TableCell>
-                        <TableCell>{invoice.amount.toFixed(2)} €</TableCell>
+                        <TableCell>${invoice.amount.toFixed(2)}</TableCell>
                         <TableCell>{invoice.createdBy}</TableCell>
                         <TableCell>
                           <Button variant="ghost" size="sm" onClick={() => handlePreviewPDF()}>
@@ -601,9 +626,9 @@ export default function InvoicesPage() {
                               </TableCell>
                               <TableCell>{item.quantity}</TableCell>
                               <TableCell>{item.description}</TableCell>
-                              <TableCell>{Number(item.unitPrice).toFixed(2)} €</TableCell>
+                              <TableCell>${Number(item.unitPrice).toFixed(2)}</TableCell>
                               <TableCell>{item.weightCbm}</TableCell>
-                              <TableCell>{item.quantity * item.unitPrice} €</TableCell>
+                              <TableCell>${(item.quantity * item.unitPrice).toFixed(2)}</TableCell>
                               <TableCell>
                                 <Button variant="ghost" size="sm" asChild>
                                   <a href={item.itemLink} target="_blank" rel="noopener noreferrer">

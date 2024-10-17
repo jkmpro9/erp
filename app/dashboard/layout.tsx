@@ -2,7 +2,6 @@
 
 import { useState, createContext, useContext } from 'react'
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
-import { UserNav } from "@/components/dashboard/user-nav"
 import { Button } from "@/components/ui/button"
 import { 
   DropdownMenu,
@@ -11,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Menu, X } from 'lucide-react'
+import { UserNav } from '@/components/dashboard/user-nav'
 
 // Create a context for language
 const LanguageContext = createContext<{
