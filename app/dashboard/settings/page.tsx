@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { UserManagement } from '../components/UserManagement';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 interface UserSettings {
   username: string;
@@ -23,6 +24,12 @@ interface CompanySettings {
   companyName: string;
   address: string;
   taxId: string;
+}
+
+interface Role {
+  id: string;
+  name: string;
+  permissions: string[];
 }
 
 const availablePermissions = [
@@ -47,6 +54,14 @@ export default function SettingsPage() {
     address: '123 Business St, City, Country',
     taxId: 'TAX123456',
   });
+  const [roles, setRoles] = useState<Role[]>([
+    { id: 'admin', name: 'Admin', permissions: ['create_invoice', 'view_clients', 'edit_settings', 'manage_users'] },
+    { id: 'team', name: 'Team', permissions: ['create_invoice', 'view_clients'] },
+    { id: 'customer', name: 'Customer', permissions: ['view_clients'] },
+  ]);
+  const [newRole, setNewRole] = useState<Omit<Role, 'id'>>({ name: '', permissions: [] });
+  const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<Role | null>(null);
 
   const handleUserSettingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -75,6 +90,32 @@ export default function SettingsPage() {
         ? prev.permissions.filter(id => id !== permissionId)
         : [...prev.permissions, permissionId],
     }));
+  };
+
+  const handleAddRole = () => {
+    const roleId = newRole.name.toLowerCase().replace(/\s+/g, '_');
+    setRoles([...roles, { ...newRole, id: roleId }]);
+    setNewRole({ name: '', permissions: [] });
+    setIsAddRoleOpen(false);
+  };
+
+  const handleEditRole = (role: Role) => {
+    setEditingRole(role);
+    setNewRole({ name: role.name, permissions: role.permissions });
+    setIsAddRoleOpen(true);
+  };
+
+  const handleUpdateRole = () => {
+    if (editingRole) {
+      setRoles(roles.map(r => r.id === editingRole.id ? { ...editingRole, ...newRole } : r));
+      setEditingRole(null);
+      setNewRole({ name: '', permissions: [] });
+      setIsAddRoleOpen(false);
+    }
+  };
+
+  const handleDeleteRole = (roleId: string) => {
+    setRoles(roles.filter(role => role.id !== roleId));
   };
 
   return (
@@ -251,40 +292,77 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="role">User Role</Label>
-                    <Select onValueChange={handleRoleChange} value={userSettings.role}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="team">Team</SelectItem>
-                        <SelectItem value="customer">Customer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Permissions</Label>
-                    <div className="space-y-2">
-                      {availablePermissions.map((permission) => (
-                        <div key={permission.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={permission.id}
-                            checked={userSettings.permissions.includes(permission.id)}
-                            onCheckedChange={() => handlePermissionChange(permission.id)}
+                  <Dialog open={isAddRoleOpen} onOpenChange={setIsAddRoleOpen}>
+                    <DialogTrigger asChild>
+                      <Button>Ajouter un Rôle</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>{editingRole ? 'Modifier le Rôle' : 'Ajouter un Nouveau Rôle'}</DialogTitle>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="roleName" className="text-right">Nom du Rôle</Label>
+                          <Input
+                            id="roleName"
+                            value={newRole.name}
+                            onChange={(e) => setNewRole({...newRole, name: e.target.value})}
+                            className="col-span-3"
                           />
-                          <label
-                            htmlFor={permission.id}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            {permission.label}
-                          </label>
                         </div>
-                      ))}
-                    </div>
+                        <div className="grid grid-cols-4 items-start gap-4">
+                          <Label className="text-right">Permissions</Label>
+                          <div className="col-span-3 space-y-2">
+                            {availablePermissions.map((permission) => (
+                              <div key={permission.id} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`role-${permission.id}`}
+                                  checked={newRole.permissions.includes(permission.id)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setNewRole({...newRole, permissions: [...newRole.permissions, permission.id]});
+                                    } else {
+                                      setNewRole({...newRole, permissions: newRole.permissions.filter(p => p !== permission.id)});
+                                    }
+                                  }}
+                                />
+                                <label htmlFor={`role-${permission.id}`}>{permission.label}</label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <Button onClick={editingRole ? handleUpdateRole : handleAddRole}>
+                        {editingRole ? 'Mettre à jour' : 'Ajouter'}
+                      </Button>
+                    </DialogContent>
+                  </Dialog>
+
+                  <div className="space-y-4">
+                    {roles.map((role) => (
+                      <Card key={role.id}>
+                        <CardHeader>
+                          <CardTitle>{role.name}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            <p>Permissions:</p>
+                            <ul className="list-disc list-inside">
+                              {role.permissions.map((permissionId) => (
+                                <li key={permissionId}>
+                                  {availablePermissions.find(p => p.id === permissionId)?.label}
+                                </li>
+                              ))}
+                            </ul>
+                            <div className="space-x-2">
+                              <Button variant="outline" onClick={() => handleEditRole(role)}>Modifier</Button>
+                              <Button variant="destructive" onClick={() => handleDeleteRole(role.id)}>Supprimer</Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                  <Button onClick={() => console.log("Save Roles & Permissions", userSettings)}>Save Roles & Permissions</Button>
                 </div>
               </CardContent>
             </Card>
