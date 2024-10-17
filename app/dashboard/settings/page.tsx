@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { UserManagement } from '../components/UserManagement';
 
 interface UserSettings {
   username: string;
@@ -32,7 +33,7 @@ const availablePermissions = [
 ];
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'user' | 'company' | 'security' | 'roles'>('user');
+  const [activeTab, setActiveTab] = useState<'user' | 'company' | 'security' | 'roles' | 'users'>('user');
   const [userSettings, setUserSettings] = useState<UserSettings>({
     username: 'johndoe',
     email: 'john@example.com',
@@ -78,7 +79,7 @@ export default function SettingsPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Settings</h1>
+      <h1 className="text-2xl font-bold mb-4">Paramètres</h1>
       
       <div className="flex">
         {/* Left sidebar */}
@@ -91,28 +92,35 @@ export default function SettingsPage() {
                   className="w-full justify-start"
                   onClick={() => setActiveTab('user')}
                 >
-                  User Settings
+                  Paramètres Utilisateur
                 </Button>
                 <Button
                   variant={activeTab === 'company' ? 'default' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => setActiveTab('company')}
                 >
-                  Company Settings
+                  Paramètres Entreprise
                 </Button>
                 <Button
                   variant={activeTab === 'security' ? 'default' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => setActiveTab('security')}
                 >
-                  Security
+                  Sécurité
                 </Button>
                 <Button
                   variant={activeTab === 'roles' ? 'default' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => setActiveTab('roles')}
                 >
-                  Roles & Permissions
+                  Rôles & Permissions
+                </Button>
+                <Button
+                  variant={activeTab === 'users' ? 'default' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('users')}
+                >
+                  Gestion des Utilisateurs
                 </Button>
               </nav>
             </CardContent>
@@ -124,7 +132,7 @@ export default function SettingsPage() {
           {activeTab === 'user' && (
             <Card>
               <CardHeader>
-                <CardTitle>User Settings</CardTitle>
+                <CardTitle>Paramètres Utilisateur</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -174,7 +182,7 @@ export default function SettingsPage() {
           {activeTab === 'company' && (
             <Card>
               <CardHeader>
-                <CardTitle>Company Settings</CardTitle>
+                <CardTitle>Paramètres Entreprise</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -214,7 +222,7 @@ export default function SettingsPage() {
           {activeTab === 'security' && (
             <Card>
               <CardHeader>
-                <CardTitle>Security Settings</CardTitle>
+                <CardTitle>Sécurité</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -239,7 +247,7 @@ export default function SettingsPage() {
           {activeTab === 'roles' && (
             <Card>
               <CardHeader>
-                <CardTitle>Roles & Permissions</CardTitle>
+                <CardTitle>Rôles & Permissions</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -280,6 +288,10 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {activeTab === 'users' && (
+            <UserManagement />
           )}
         </div>
       </div>
