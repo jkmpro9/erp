@@ -127,3 +127,20 @@ export {
   ToastClose,
   ToastAction,
 };
+
+export function useToast() {
+  const [toasts, setToasts] = React.useState<ToastProps[]>([])
+
+  const toast = React.useCallback(
+    ({ ...props }: ToastProps) => {
+      setToasts((prevToasts) => [...prevToasts, { ...props, id: Date.now().toString() }])
+    },
+    [setToasts]
+  )
+
+  const dismiss = React.useCallback((id: string) => {
+    setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id))
+  }, [setToasts])
+
+  return { toast, dismiss, toasts }
+}
