@@ -2,7 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { PDFViewer, Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { PDFViewer, Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+
+// Register fonts (you'll need to add these font files to your project)
+Font.register({
+  family: 'Helvetica',
+  fonts: [
+    { src: '/fonts/Helvetica.ttf' },
+    { src: '/fonts/Helvetica-Bold.ttf', fontWeight: 'bold' },
+  ]
+});
 
 // Define styles for PDF
 const styles = StyleSheet.create({
@@ -10,25 +19,34 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     padding: 30,
+    fontFamily: 'Helvetica',
   },
   header: {
     marginBottom: 20,
   },
-  title: {
-    fontSize: 18,
+  companyName: {
+    fontSize: 21,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 15,
   },
   companyInfo: {
-    fontSize: 10,
+    fontSize: 13,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 2,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: 20,
   },
   invoiceInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
+    fontSize: 10,
   },
   clientInfo: {
     width: '50%',
@@ -38,53 +56,79 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   label: {
-    fontSize: 10,
     fontWeight: 'bold',
     marginBottom: 5,
   },
   value: {
-    fontSize: 10,
     marginBottom: 5,
   },
   table: {
     display: 'flex',
     width: 'auto',
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#bfbfbf',
+    marginTop: 10,
     marginBottom: 10,
+    borderStyle: 'solid',
+    borderWidth: 0.5,
+    borderColor: '#bfbfbf',
   },
   tableRow: {
-    margin: 'auto',
     flexDirection: 'row',
+    borderBottomColor: '#bfbfbf',
+    borderBottomWidth: 0.5,
+    alignItems: 'center',
+    minHeight: 50, // Increased height for all rows
+    textAlign: 'center',
   },
-  tableColHeader: {
-    width: '16.66%',
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#bfbfbf',
-    backgroundColor: '#f0f0f0',
-    padding: 5,
+  tableRowHeader: {
+    backgroundColor: '#008080',
+    color: '#FFFFFF',
+    minHeight: 30, // Reduced height for header
   },
-  tableCol: {
-    width: '16.66%',
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#bfbfbf',
-    padding: 5,
+  tableColSmall: {
+    width: '8%', // Reduced width for NUM and QTY
+    borderRightColor: '#bfbfbf',
+    borderRightWidth: 0.5,
+    paddingVertical: 5,
+    paddingHorizontal: 2,
   },
-  tableCellHeader: {
-    margin: 'auto',
-    fontSize: 10,
-    fontWeight: 'bold',
+  tableColMedium: {
+    width: '12%', // Medium width for IMAGE, PRIX UNIT, POIDS/CBM, MONTANT
+    borderRightColor: '#bfbfbf',
+    borderRightWidth: 0.5,
+    paddingVertical: 5,
+    paddingHorizontal: 2,
+  },
+  tableColLarge: {
+    width: '36%', // Increased width for DESCRIPTION
+    borderRightColor: '#bfbfbf',
+    borderRightWidth: 0.5,
+    paddingVertical: 5,
+    paddingHorizontal: 2,
   },
   tableCell: {
-    margin: 'auto',
+    fontSize: 9,
+    textAlign: 'center',
+  },
+  tableCellHeader: {
     fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#FFFFFF',
+  },
+  tableCellDescription: {
+    fontSize: 9,
+    textAlign: 'left',
+    paddingLeft: 5,
+  },
+  itemImage: {
+    width: 30,
+    height: 30,
+    objectFit: 'contain',
   },
   totals: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    marginTop: 10,
   },
   totalItem: {
     flexDirection: 'row',
@@ -92,11 +136,11 @@ const styles = StyleSheet.create({
     width: '30%',
     marginBottom: 5,
   },
-  totalLabel: {
+  totalItemLabel: {
     fontSize: 10,
     fontWeight: 'bold',
   },
-  totalValue: {
+  totalItemValue: {
     fontSize: 10,
   },
   footer: {
@@ -104,24 +148,94 @@ const styles = StyleSheet.create({
     bottom: 30,
     left: 30,
     right: 30,
+    fontSize: 10,
+    textAlign: 'center',
+  },
+  calculationSection: {
+    marginTop: 20,
+    alignSelf: 'flex-end',
+    width: '40%',
+  },
+  calculationRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+  },
+  calculationLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  calculationValue: {
+    fontSize: 10,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 5,
+    backgroundColor: '#008080',
+    padding: 5,
+  },
+  totalRowLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  totalRowValue: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  conditionsSection: {
+    marginTop: 20,
+    width: '55%',
+  },
+  conditionsTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  conditionsText: {
+    fontSize: 10,
+    marginBottom: 5,
+  },
+  footerSection: {
+    marginTop: 20,
+    borderTop: '1 solid #008080',
+    paddingTop: 10,
+  },
+  footerText: {
     fontSize: 8,
     textAlign: 'center',
+    color: '#666',
   },
 });
 
+// Fonction pour convertir une URL d'image en base64
+const getBase64FromUrl = async (url: string) => {
+  const data = await fetch(url);
+  const blob = await data.blob();
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(blob); 
+    reader.onloadend = () => {
+      const base64data = reader.result;   
+      resolve(base64data);
+    }
+  });
+}
+
 function getInvoice(id: string) {
-  // In a real app, you would fetch the invoice data from an API
-  // For now, we'll just return dummy data
+  // Dans une vraie application, vous récupéreriez ces données depuis une API
   return {
-    id,
+    id: '20241004-162',
     clientName: 'ARMEL',
     clientPhone: '243 858 844 663',
     deliveryLocation: 'LUBUMBASHI',
     deliveryMethod: 'AVION',
     creationDate: '2024-10-04',
     items: [
-      { num: 1, image: 'https://example.com/image1.jpg', qty: 2, description: 'Suitable for UNO R3 learning kit', price: 14.87, weight: 0, total: 29.74 },
-      { num: 2, image: 'https://example.com/image2.jpg', qty: 1, description: '830G5 i5-7th 8G+256G', price: 300.00, weight: 0, total: 300.00 },
+      { num: 1, image: 'https://cbu01.alicdn.com/O1CN01i0rnHV1nsScw5Cr1C_!!2215843795145-0-cib.jpg', qty: 2, description: 'Suitable for UNO R3 learning kit', price: 14.87, weight: 0, total: 29.74 },
+      { num: 2, image: 'https://cbu01.alicdn.com/img/ibank/O1CN011wKzRU2FZxtZ44mDx_!!2215643428895-0-cib.jpg', qty: 1, description: '830G5 i5-7th 8G+256G', price: 300.00, weight: 0, total: 300.00 },
     ],
     subtotal: 329.74,
     fees: 32.97,
@@ -133,13 +247,24 @@ function getInvoice(id: string) {
 export default function InvoicePreviewPage() {
   const params = useParams();
   const [invoice, setInvoice] = useState<any>(null);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   useEffect(() => {
-    const fetchedInvoice = getInvoice(params.id as string);
-    setInvoice(fetchedInvoice);
+    const fetchInvoice = async () => {
+      const fetchedInvoice = getInvoice(params.id as string);
+      // Convertir toutes les URLs d'images en base64
+      const itemsWithBase64Images = await Promise.all(fetchedInvoice.items.map(async (item) => ({
+        ...item,
+        imageBase64: await getBase64FromUrl(item.image),
+      })));
+      setInvoice({...fetchedInvoice, items: itemsWithBase64Images});
+      setImagesLoaded(true);
+    };
+
+    fetchInvoice();
   }, [params.id]);
 
-  if (!invoice) {
+  if (!invoice || !imagesLoaded) {
     return <div>Loading...</div>;
   }
 
@@ -147,9 +272,9 @@ export default function InvoicePreviewPage() {
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.title}>COCCINELLE SARL</Text>
+          <Text style={styles.companyName}>COCCINELLE SARL</Text>
           <Text style={styles.companyInfo}>14, Kokolo, Q/Matonge Pigeon, C/Ngaliema - Kinshasa</Text>
-          <Text style={styles.companyInfo}>45, Avenue Nyangwe - Elle Mbayo, Q/Lido, C/Lubumbashi</Text>
+          <Text style={styles.companyInfo}>45, Avenue Nyangwe - Elie Mbayo, Q/Lido, C/Lubumbashi</Text>
           <Text style={styles.companyInfo}>+243970764213 / +243859583397 / +8617858307921</Text>
           <Text style={styles.companyInfo}>sales@coccinelledrc.com | www.coccinelledrc.com</Text>
         </View>
@@ -163,92 +288,71 @@ export default function InvoicePreviewPage() {
             <Text style={styles.label}>PHONE: {invoice.clientPhone}</Text>
           </View>
           <View style={styles.invoiceDetails}>
-            <Text style={styles.value}>Facture No: {invoice.id}</Text>
-            <Text style={styles.value}>Date Facture: {invoice.creationDate}</Text>
+            <Text style={styles.value}>Facture No : {invoice.id}</Text>
+            <Text style={styles.value}>Date Facture : {invoice.creationDate}</Text>
             <Text style={styles.value}>LIVRAISON: {invoice.deliveryLocation}</Text>
             <Text style={styles.value}>METHODE: {invoice.deliveryMethod}</Text>
           </View>
         </View>
 
         <View style={styles.table}>
-          <View style={styles.tableRow}>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCellHeader}>NUM</Text>
-            </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCellHeader}>IMAGE</Text>
-            </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCellHeader}>QTY</Text>
-            </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCellHeader}>DESCRIPTION</Text>
-            </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCellHeader}>PRIX UNIT</Text>
-            </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCellHeader}>POIDS/CBM</Text>
-            </View>
-            <View style={styles.tableColHeader}>
-              <Text style={styles.tableCellHeader}>MONTANT</Text>
-            </View>
+          <View style={[styles.tableRow, styles.tableRowHeader]}>
+            <View style={styles.tableColSmall}><Text style={styles.tableCellHeader}>NUM</Text></View>
+            <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>IMAGE</Text></View>
+            <View style={styles.tableColSmall}><Text style={styles.tableCellHeader}>QTY</Text></View>
+            <View style={styles.tableColLarge}><Text style={styles.tableCellHeader}>DESCRIPTION</Text></View>
+            <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>PRIX UNIT</Text></View>
+            <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>POIDS/CBM</Text></View>
+            <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>MONTANT</Text></View>
           </View>
           {invoice.items.map((item: any, index: number) => (
             <View style={styles.tableRow} key={index}>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>{item.num}</Text>
+              <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.num}</Text></View>
+              <View style={styles.tableColMedium}>
+                <Image src={item.imageBase64} style={styles.itemImage} />
               </View>
-              <View style={styles.tableCol}>
-                <Image src={item.image} style={{ width: 30, height: 30 }} />
+              <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.qty}</Text></View>
+              <View style={styles.tableColLarge}>
+                <Text style={styles.tableCellDescription}>{item.description}</Text>
               </View>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>{item.qty}</Text>
-              </View>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>{item.description}</Text>
-              </View>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>${item.price.toFixed(2)}</Text>
-              </View>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>{item.weight}</Text>
-              </View>
-              <View style={styles.tableCol}>
-                <Text style={styles.tableCell}>${item.total.toFixed(2)}</Text>
-              </View>
+              <View style={styles.tableColMedium}><Text style={styles.tableCell}>${item.price.toFixed(2)}</Text></View>
+              <View style={styles.tableColMedium}><Text style={styles.tableCell}>{item.weight}</Text></View>
+              <View style={styles.tableColMedium}><Text style={styles.tableCell}>${item.total.toFixed(2)}</Text></View>
             </View>
           ))}
         </View>
 
-        <View style={styles.totals}>
-          <View>
-            <View style={styles.totalItem}>
-              <Text style={styles.totalLabel}>SOUS-TOTAL</Text>
-              <Text style={styles.totalValue}>${invoice.subtotal.toFixed(2)}</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View style={styles.conditionsSection}>
+            <Text style={styles.conditionsTitle}>Conditions Générales</Text>
+            <Text style={styles.conditionsText}>Délais de livraison : 10-20 jours selon le types de marchandises</Text>
+          </View>
+
+          <View style={styles.calculationSection}>
+            <View style={styles.calculationRow}>
+              <Text style={styles.calculationLabel}>SOUS-TOTAL</Text>
+              <Text style={styles.calculationValue}>${invoice.subtotal.toFixed(2)}</Text>
             </View>
-            <View style={styles.totalItem}>
-              <Text style={styles.totalLabel}>FRAIS (10%)</Text>
-              <Text style={styles.totalValue}>${invoice.fees.toFixed(2)}</Text>
+            <View style={styles.calculationRow}>
+              <Text style={styles.calculationLabel}>FRAIS (10%)</Text>
+              <Text style={styles.calculationValue}>${invoice.fees.toFixed(2)}</Text>
             </View>
-            <View style={styles.totalItem}>
-              <Text style={styles.totalLabel}>TRANSPORT & DOUANE</Text>
-              <Text style={styles.totalValue}>${invoice.transport.toFixed(2)}</Text>
+            <View style={styles.calculationRow}>
+              <Text style={styles.calculationLabel}>TRANSPORT & DOUANE</Text>
+              <Text style={styles.calculationValue}>${invoice.transport.toFixed(2)}</Text>
             </View>
-            <View style={styles.totalItem}>
-              <Text style={styles.totalLabel}>TOTAL GENERALE</Text>
-              <Text style={styles.totalValue}>${invoice.total.toFixed(2)}</Text>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalRowLabel}>TOTAL GENERALE</Text>
+              <Text style={styles.totalRowValue}>${invoice.total.toFixed(2)}</Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.footer}>
-          <Text>Conditions Générales</Text>
-          <Text>Délais de livraison : 10-20 jours selon le types de marchandises</Text>
-          <Text>EQUITY BCDC | 00011105023-32000099901-60 | COCCINELLE RAWBANK | 04011-04410018001-91 |</Text>
-          <Text>COCCINELLE SARL</Text>
-          <Text>RCCM: CD/KNG/RCCM/21-B-02464 | ID.NAT: 01-4300-N89711B | IMPOT: A2173499P</Text>
-          <Text>Email: sales@coccinelledrc.com | Site Web: www.coccinelledrc.com</Text>
+        <View style={styles.footerSection}>
+          <Text style={styles.footerText}>EQUITY BCDC | 00011105023-32000099901-60 | COCCINELLE RAWBANK | 04011-04410018001-91 |</Text>
+          <Text style={styles.footerText}>COCCINELLE SARL</Text>
+          <Text style={styles.footerText}>RCCM: CD/KNG/RCCM/21-B-02464 | ID.NAT: 01-4300-N89711B | IMPOT: A2173499P</Text>
+          <Text style={styles.footerText}>Email: sales@coccinelledrc.com | Site Web: www.coccinelledrc.com</Text>
         </View>
       </Page>
     </Document>
