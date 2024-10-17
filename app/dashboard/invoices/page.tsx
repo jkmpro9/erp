@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
-import { Link, Pencil, Trash, FileText } from 'lucide-react';
+import { Link, Pencil, Trash, FileText, Search } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import dynamic from 'next/dynamic';
@@ -95,6 +95,19 @@ export default function InvoicesPage() {
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
 
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  // Fonction de filtrage
+  const filteredInvoices = invoices.filter((invoice) => {
+    const matchesSearch = invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          invoice.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === "all" || 
+                          (filterStatus === "paid" && invoice.amount > 0) ||
+                          (filterStatus === "unpaid" && invoice.amount === 0);
+    return matchesSearch && matchesFilter;
+  });
 
   const handlePreviewPDF = () => {
     // Instead of opening a modal, we'll navigate to a new route
@@ -309,6 +322,27 @@ export default function InvoicesPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Liste des Factures</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Rechercher une facture..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filtrer par statut" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes les factures</SelectItem>
+                      <SelectItem value="paid">Factures payées</SelectItem>
+                      <SelectItem value="unpaid">Factures non payées</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -323,7 +357,7 @@ export default function InvoicesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {invoices.map((invoice) => (
+                    {filteredInvoices.map((invoice) => (
                       <TableRow key={invoice.id}>
                         <TableCell>{invoice.id}</TableCell>
                         <TableCell>{invoice.clientName}</TableCell>

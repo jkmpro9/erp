@@ -7,6 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from "@/components/ui/label"
 import { Pencil, Trash } from 'lucide-react';
+import { Search } from 'lucide-react';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 interface Client {
   id: string;
@@ -25,6 +27,8 @@ export default function ClientsPage() {
     address: '',
     city: ''
   });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCity, setFilterCity] = useState("all");
 
   useEffect(() => {
     // Fetch clients from API in a real application
@@ -48,6 +52,13 @@ export default function ClientsPage() {
       setNewClient({ name: '', phone: '', address: '', city: '' });
     }
   };
+
+  const filteredClients = clients.filter((client) => {
+    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          client.phone.includes(searchTerm);
+    const matchesFilter = filterCity === "all" || client.city === filterCity;
+    return matchesSearch && matchesFilter;
+  });
 
   return (
     <div className="container mx-auto p-4">
@@ -136,7 +147,29 @@ export default function ClientsPage() {
           {activeTab === 'list' && (
             <Card>
               <CardHeader>
-                <CardTitle>Client List</CardTitle>
+                <CardTitle>Liste des Clients</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Rechercher un client..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8"
+                    />
+                  </div>
+                  <Select value={filterCity} onValueChange={setFilterCity}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filtrer par ville" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes les villes</SelectItem>
+                      <SelectItem value="Lubumbashi">Lubumbashi</SelectItem>
+                      <SelectItem value="Kinshasa">Kinshasa</SelectItem>
+                      {/* Ajoutez d'autres villes selon vos besoins */}
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -151,7 +184,7 @@ export default function ClientsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {clients.map((client) => (
+                    {filteredClients.map((client) => (
                       <TableRow key={client.id}>
                         <TableCell>{client.id}</TableCell>
                         <TableCell>{client.name}</TableCell>
