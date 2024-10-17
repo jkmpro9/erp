@@ -7,9 +7,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Link, Pencil, Trash } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation'
+// Dynamically import jsPDF with ssr: false
+// const JsPDF = dynamic(() => import('jspdf').then(mod => mod.default), { ssr: false });  
+
+// Dynamically import PDFViewer and InvoicePDF components
+const PDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFViewer), { ssr: false });
+const InvoicePDF = dynamic(() => import('@/components/InvoicePDF'), { ssr: false });
 
 interface Article {
   imageUrl: string;
@@ -48,6 +57,7 @@ const clientList: Client[] = [
 ];
 
 export default function InvoicesPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
   const [invoices, setInvoices] = useState<Invoice[]>([
     { id: 'FAC001', clientName: 'Acme Corp', creationDate: '2023-06-01', amount: 5000, createdBy: 'John Doe', clientPhone: '123-456-7890', clientAddress: '123 Main St', deliveryLocation: 'New York', deliveryMethod: 'Air', items: [] },
@@ -78,6 +88,40 @@ export default function InvoicesPage() {
   const [totalQuantity, setTotalQuantity] = useState(0);
   const [totalWeight, setTotalWeight] = useState(0);
   const [feePercentage, setFeePercentage] = useState(10);
+
+  const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
+
+  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
+
+  const handlePreviewPDF = () => {
+    // Instead of opening a modal, we'll navigate to a new route
+    router.push(`/dashboard/invoices/preview/${createPreviewInvoice().id}`)
+  }
+
+  // Add this function to create a preview invoice
+  const createPreviewInvoice = (): Invoice => ({
+    ...newInvoice,
+    id: 'PREVIEW',
+    creationDate: new Date().toISOString().split('T')[0],
+    amount: total,
+    createdBy: 'Current User',
+  });
+
+  const handleDownloadPDF = async () => {
+    // Dynamically import jsPDF only when needed
+    const jsPDF = (await import('jspdf')).default;
+    const doc = new jsPDF();
+    
+    // Add content to the PDF
+    doc.text("COCCINELLE SARL", 10, 10);
+    doc.text(`Facture No : ${createPreviewInvoice().id}`, 10, 20);
+    doc.text(`Date Facture : ${createPreviewInvoice().creationDate}`, 10, 30);
+    doc.text(`CLIENT(E): ${createPreviewInvoice().clientName}`, 10, 40);
+    // ... add more invoice details
+
+    // Save the PDF
+    doc.save("invoice.pdf");
+  };
 
   useEffect(() => {
     const newSubtotal = newInvoice.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
@@ -154,6 +198,30 @@ export default function InvoicesPage() {
       deliveryMethod: '',
       items: []
     });
+  };
+
+  const handleEditItem = (index: number) => {
+    setEditingItemIndex(index);
+    const itemToEdit = newInvoice.items[index];
+    setNewArticle({ ...itemToEdit });
+    setIsAddArticleOpen(true);
+  };
+
+  const handleUpdateItem = () => {
+    if (editingItemIndex !== null) {
+      const updatedItems = [...newInvoice.items];
+      updatedItems[editingItemIndex] = newArticle;
+      setNewInvoice({ ...newInvoice, items: updatedItems });
+      setEditingItemIndex(null);
+    } else {
+      handleAddArticle();
+    }
+    setIsAddArticleOpen(false);
+  };
+
+  const handleDeleteItem = (index: number) => {
+    const updatedItems = newInvoice.items.filter((_, i) => i !== index);
+    setNewInvoice({ ...newInvoice, items: updatedItems });
   };
 
   return (
@@ -304,7 +372,7 @@ export default function InvoicesPage() {
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
-                              <DialogTitle>Ajouter un Nouveau Article</DialogTitle>
+                              <DialogTitle>{editingItemIndex !== null ? 'Modifier l\'Article' : 'Ajouter un Nouveau Article'}</DialogTitle>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                               <div className="grid grid-cols-4 items-center gap-4">
@@ -332,7 +400,7 @@ export default function InvoicesPage() {
                                 <Input id="itemLink" name="itemLink" value={newArticle.itemLink} onChange={handleInputChange} className="col-span-3" />
                               </div>
                             </div>
-                            <Button onClick={handleAddArticle}>Ajouter l'Article</Button>
+                            <Button onClick={handleUpdateItem}>{editingItemIndex !== null ? 'Mettre à jour l\'Article' : 'Ajouter l\'Article'}</Button>
                           </DialogContent>
                         </Dialog>
                       </div>
@@ -371,12 +439,28 @@ export default function InvoicesPage() {
                               </TableCell>
                               <TableCell>
                                 <div className="flex space-x-2">
-                                  <Button variant="ghost" size="sm">
+                                  <Button variant="ghost" size="sm" onClick={() => handleEditItem(index)}>
                                     <Pencil className="h-4 w-4" />
                                   </Button>
-                                  <Button variant="ghost" size="sm">
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="sm">
+                                        <Trash className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Cette action ne peut pas être annulée. Cela supprimera définitivement cet article de la facture.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteItem(index)}>Supprimer</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -453,7 +537,7 @@ export default function InvoicesPage() {
                       <Button onClick={handleCreateInvoice} className="w-full bg-blue-600 hover:bg-blue-700 text-white">Créer la Facture</Button>
                       <Button variant="outline" className="w-full text-gray-300 border-gray-600 hover:bg-gray-700">Sauvegarder Facture</Button>
                       <Button variant="secondary" className="w-full bg-gray-700 text-white hover:bg-gray-600">Charger Facture</Button>
-                      <Button variant="outline" className="w-full text-gray-300 border-gray-600 hover:bg-gray-700">
+                      <Button onClick={handlePreviewPDF} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                         APERÇU ET TÉLÉCHARGER PDF
                       </Button>
                     </div>
