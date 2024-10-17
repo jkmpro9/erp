@@ -20,24 +20,24 @@ module.exports = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#4ADE80",
-          foreground: "#0F172A",
+          DEFAULT: "#22c55e", // Green-600
+          foreground: "#ffffff",
         },
         secondary: {
-          DEFAULT: "#0F172A",
-          foreground: "#ffffff",
+          DEFAULT: "#ffffff",
+          foreground: "#0f172a", // Slate-900
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "#f1f5f9", // Slate-100
+          foreground: "#64748b", // Slate-500
         },
         accent: {
-          DEFAULT: "#38BDF8",
-          foreground: "#0F172A",
+          DEFAULT: "#16a34a", // Green-700
+          foreground: "#ffffff",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -47,10 +47,20 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        navbar: {
+          DEFAULT: "#0f172a", // Dark blue for navbar background
+          foreground: "#ffffff",
+          active: "#22c55e", // Green-600 for active item
+          hover: "#1e293b", // Slate-800 for hover state
+        },
+        icon: {
+          light: "#0f172a", // Dark color for light mode
+          dark: "#ffffff", // Light color for dark mode
+        },
       },
       borderRadius: {
-        lg: `var(--radius)`,
-        md: `calc(var(--radius) - 2px)`,
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {

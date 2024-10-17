@@ -1,328 +1,187 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Overview } from '@/components/dashboard/overview';
+import { RecentSales } from '@/components/dashboard/recent-sales';
 import { Button } from '@/components/ui/button';
-import { Download, Bell, User, DollarSign, FileText } from 'lucide-react';
 
-const DashboardPage = () => {
-  // Données factices pour les graphiques et tableaux
-  const salesData = [
-    { name: 'Jan', ventes: 4000, depenses: 2400 },
-    { name: 'Fév', ventes: 3000, depenses: 1398 },
-    { name: 'Mar', ventes: 2000, depenses: 9800 },
-    { name: 'Avr', ventes: 2780, depenses: 3908 },
-    { name: 'Mai', ventes: 1890, depenses: 4800 },
-    { name: 'Juin', ventes: 2390, depenses: 3800 },
-  ];
-
-  const clientData = [
-    { name: 'Jan', clients: 100 },
-    { name: 'Fév', clients: 120 },
-    { name: 'Mar', clients: 150 },
-    { name: 'Avr', clients: 180 },
-    { name: 'Mai', clients: 200 },
-    { name: 'Juin', clients: 220 },
-  ];
-
-  const recentReports = [
-    { id: 1, name: 'Rapport de Ventes Mensuel', date: '2023-06-01', type: 'Excel' },
-    { id: 2, name: 'Analyse des Clients', date: '2023-06-15', type: 'PDF' },
-    { id: 3, name: 'Inventaire des Produits', date: '2023-06-30', type: 'CSV' },
-  ];
-
-  const recentNotifications = [
-    { id: 1, message: 'Nouvelle commande reçue', time: '2 minutes ago' },
-    { id: 2, message: 'Paiement confirmé pour la facture #1234', time: '1 heure ago' },
-    { id: 3, message: 'Stock faible pour le produit XYZ', time: '3 heures ago' },
-  ];
-
-  const newClients = [
-    { id: 1, name: 'Alice Johnson', date: '2023-06-01', location: 'Kinshasa' },
-    { id: 2, name: 'Bob Smith', date: '2023-06-02', location: 'Lubumbashi' },
-    { id: 3, name: 'Charlie Brown', date: '2023-06-03', location: 'Goma' },
-  ];
-
-  const recentTransactions = [
-    { id: 1, client: 'Alice Johnson', amount: 500, date: '2023-06-01', status: 'Complété' },
-    { id: 2, client: 'Bob Smith', amount: 750, date: '2023-06-02', status: 'En attente' },
-    { id: 3, client: 'Charlie Brown', amount: 1000, date: '2023-06-03', status: 'Complété' },
-  ];
-
-  const recentInvoices = [
-    { id: 'INV001', client: 'Alice Johnson', amount: 500, date: '2023-06-01', status: 'Payée' },
-    { id: 'INV002', client: 'Bob Smith', amount: 750, date: '2023-06-02', status: 'En attente' },
-    { id: 'INV003', client: 'Charlie Brown', amount: 1000, date: '2023-06-03', status: 'Payée' },
-  ];
-
-  const [invoiceNumber, setInvoiceNumber] = useState('');
+export default function DashboardPage() {
+  const [userEmail, setUserEmail] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    // Générer le numéro de facture au chargement de la page
-    const currentDate = new Date();
-    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
-    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    setInvoiceNumber(`COCCI-${month}-${randomNum}`);
-  }, []);
+    // Check if user is logged in
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (!isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+
+    // Retrieve user data from localStorage
+    const email = localStorage.getItem('userEmail') || '';
+    const adminStatus = localStorage.getItem('isAdmin') === 'true';
+    setUserEmail(email);
+    setIsAdmin(adminStatus);
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('isAdmin');
+    router.push('/login');
+  };
 
   return (
-    <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
-        <TabsTrigger 
-          value="overview" 
-          className="data-[state=active]:bg-blue-500 data-[state=active]:text-white"
-        >
-          Vue d'ensemble
-        </TabsTrigger>
-        <TabsTrigger 
-          value="analytics" 
-          className="data-[state=active]:bg-green-500 data-[state=active]:text-white"
-        >
-          Analytiques
-        </TabsTrigger>
-        <TabsTrigger 
-          value="reports" 
-          className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white"
-        >
-          Rapports
-        </TabsTrigger>
-        <TabsTrigger 
-          value="notifications" 
-          className="data-[state=active]:bg-red-500 data-[state=active]:text-white"
-        >
-          Notifications
-        </TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="overview">
-        <Card>
-          <CardHeader>
-            <CardTitle>Vue d'ensemble</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Ventes Totales</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold">$24,000</p>
-                  <p className="text-sm text-gray-500">+15% par rapport au mois dernier</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Nouveaux Clients</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold">120</p>
-                  <p className="text-sm text-gray-500">+5% par rapport au mois dernier</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Nouveaux Clients</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nom</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Localisation</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {newClients.map((client) => (
-                        <TableRow key={client.id}>
-                          <TableCell>{client.name}</TableCell>
-                          <TableCell>{client.date}</TableCell>
-                          <TableCell>{client.location}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Transactions Récentes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Client</TableHead>
-                        <TableHead>Montant</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Statut</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {recentTransactions.map((transaction) => (
-                        <TableRow key={transaction.id}>
-                          <TableCell>{transaction.client}</TableCell>
-                          <TableCell>${transaction.amount}</TableCell>
-                          <TableCell>{transaction.date}</TableCell>
-                          <TableCell>{transaction.status}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-
+    <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <div>
+          <p>Welcome, {userEmail}</p>
+          <p>{isAdmin ? 'Admin User' : 'Regular User'}</p>
+          <Button onClick={handleLogout}>Logout</Button>
+        </div>
+      </div>
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="analytics" disabled>
+            Analytics
+          </TabsTrigger>
+          <TabsTrigger value="reports" disabled>
+            Reports
+          </TabsTrigger>
+          <TabsTrigger value="notifications" disabled>
+            Notifications
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Factures Récentes</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Revenue
+                </CardTitle>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  className="h-4 w-4 text-muted-foreground"
+                >
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID Facture</TableHead>
-                      <TableHead>Client</TableHead>
-                      <TableHead>Montant</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Statut</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentInvoices.map((invoice) => (
-                      <TableRow key={invoice.id}>
-                        <TableCell>{invoice.id}</TableCell>
-                        <TableCell>{invoice.client}</TableCell>
-                        <TableCell>${invoice.amount}</TableCell>
-                        <TableCell>{invoice.date}</TableCell>
-                        <TableCell>{invoice.status}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Numéro de Facture</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{invoiceNumber}</p>
-                <p className="text-sm text-gray-500">Généré automatiquement</p>
+                <div className="text-2xl font-bold">$45,231.89</div>
+                <p className="text-xs text-muted-foreground">
+                  +20.1% from last month
+                </p>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader>
-                <CardTitle>Date de Création</CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Subscriptions
+                </CardTitle>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  className="h-4 w-4 text-muted-foreground"
+                >
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold">{new Date().toLocaleDateString()}</p>
-                <p className="text-sm text-gray-500">Date actuelle</p>
+                <div className="text-2xl font-bold">+2350</div>
+                <p className="text-xs text-muted-foreground">
+                  +180.1% from last month
+                </p>
               </CardContent>
             </Card>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="analytics">
-        <Card>
-          <CardHeader>
-            <CardTitle>Analytiques</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="ventes" fill="#8884d8" />
-                  <Bar dataKey="depenses" fill="#82ca9d" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="h-[400px] mt-8">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={clientData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="clients" stroke="#8884d8" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="reports">
-        <Card>
-          <CardHeader>
-            <CardTitle>Rapports Récents</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nom du Rapport</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentReports.map((report) => (
-                  <TableRow key={report.id}>
-                    <TableCell>{report.name}</TableCell>
-                    <TableCell>{report.date}</TableCell>
-                    <TableCell>{report.type}</TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm">
-                        <Download className="mr-2 h-4 w-4" />
-                        Télécharger
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="notifications">
-        <Card>
-          <CardHeader>
-            <CardTitle>Notifications Récentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-4">
-              {recentNotifications.map((notification) => (
-                <li key={notification.id} className="flex items-center space-x-4 p-4 bg-gray-800 rounded-lg">
-                  <Bell className="h-6 w-6 text-blue-400" />
-                  <div>
-                    <p className="font-semibold text-white">{notification.message}</p>
-                    <p className="text-sm text-gray-400">{notification.time}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Sales</CardTitle>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  className="h-4 w-4 text-muted-foreground"
+                >
+                  <rect width="20" height="14" x="2" y="5" rx="2" />
+                  <path d="M2 10h20" />
+                </svg>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+12,234</div>
+                <p className="text-xs text-muted-foreground">
+                  +19% from last month
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Active Now
+                </CardTitle>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  className="h-4 w-4 text-muted-foreground"
+                >
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                </svg>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+573</div>
+                <p className="text-xs text-muted-foreground">
+                  +201 since last hour
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <Card className="col-span-4">
+              <CardHeader>
+                <CardTitle>Overview</CardTitle>
+              </CardHeader>
+              <CardContent className="pl-2">
+                <Overview />
+              </CardContent>
+            </Card>
+            <Card className="col-span-3">
+              <CardHeader>
+                <CardTitle>Recent Sales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RecentSales />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
-};
-
-export default DashboardPage;
+}

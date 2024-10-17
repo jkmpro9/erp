@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,11 +13,25 @@ const LoginPage = () => {
   const [loginAsAdmin, setLoginAsAdmin] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    // Check if user is already logged in
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    if (isLoggedIn) {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Implement login logic here
     console.log('Login submitted', { email, password, rememberMe, loginAsAdmin });
-    // Redirect to dashboard or show error
+    
+    // Save data to localStorage
+    localStorage.setItem('userEmail', email);
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('isAdmin', loginAsAdmin.toString());
+    
+    // Redirect to dashboard
     router.push('/dashboard');
   };
 
