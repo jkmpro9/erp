@@ -120,9 +120,19 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     paddingLeft: 5,
   },
+  tableColImage: {
+    width: '14.28%', // Same as other columns
+    borderRightColor: '#bfbfbf',
+    borderRightWidth: 0.5,
+    paddingVertical: 5,
+    paddingHorizontal: 2,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   itemImage: {
-    width: 30,
-    height: 30,
+    width: 40,  // Increased from 30
+    height: 40, // Increased from 30
     objectFit: 'contain',
   },
   totals: {
@@ -298,7 +308,7 @@ export default function InvoicePreviewPage() {
         <View style={styles.table}>
           <View style={[styles.tableRow, styles.tableRowHeader]}>
             <View style={styles.tableColSmall}><Text style={styles.tableCellHeader}>NUM</Text></View>
-            <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>IMAGE</Text></View>
+            <View style={styles.tableColImage}><Text style={styles.tableCellHeader}>IMAGE</Text></View>
             <View style={styles.tableColSmall}><Text style={styles.tableCellHeader}>QTY</Text></View>
             <View style={styles.tableColLarge}><Text style={styles.tableCellHeader}>DESCRIPTION</Text></View>
             <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>PRIX UNIT</Text></View>
@@ -308,7 +318,7 @@ export default function InvoicePreviewPage() {
           {invoice.items.map((item: any, index: number) => (
             <View style={styles.tableRow} key={index}>
               <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.num}</Text></View>
-              <View style={styles.tableColMedium}>
+              <View style={styles.tableColImage}>
                 <Image src={item.imageBase64} style={styles.itemImage} />
               </View>
               <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.qty}</Text></View>
