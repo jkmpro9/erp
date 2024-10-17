@@ -37,6 +37,10 @@ interface Invoice {
   deliveryLocation: string;
   deliveryMethod: string;
   items: Article[];
+  subtotal: number;  // Ajouté
+  fees: number;      // Ajouté
+  transport: number; // Ajouté
+  total: number;     // Ajouté
 }
 
 interface Client {
@@ -62,8 +66,8 @@ export default function InvoicesPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'list' | 'create' | 'drafts'>('list');
   const [invoices, setInvoices] = useState<Invoice[]>([
-    { id: 'FAC001', clientName: 'Acme Corp', creationDate: '2023-06-01', amount: 5000, createdBy: 'John Doe', clientPhone: '123-456-7890', clientAddress: '123 Main St', deliveryLocation: 'New York', deliveryMethod: 'Air', items: [] },
-    { id: 'FAC002', clientName: 'GlobalTech', creationDate: '2023-06-05', amount: 7500, createdBy: 'Jane Smith', clientPhone: '098-765-4321', clientAddress: '456 Oak Ave', deliveryLocation: 'San Francisco', deliveryMethod: 'Sea', items: [] },
+    { id: 'FAC001', clientName: 'Acme Corp', creationDate: '2023-06-01', amount: 5000, createdBy: 'John Doe', clientPhone: '123-456-7890', clientAddress: '123 Main St', deliveryLocation: 'New York', deliveryMethod: 'Air', items: [], subtotal: 0, fees: 0, transport: 0, total: 0 },
+    { id: 'FAC002', clientName: 'GlobalTech', creationDate: '2023-06-05', amount: 7500, createdBy: 'Jane Smith', clientPhone: '098-765-4321', clientAddress: '456 Oak Ave', deliveryLocation: 'San Francisco', deliveryMethod: 'Sea', items: [], subtotal: 0, fees: 0, transport: 0, total: 0 },
   ]);
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [newInvoice, setNewInvoice] = useState<Omit<Invoice, 'id' | 'creationDate' | 'amount' | 'createdBy'>>({
@@ -72,7 +76,11 @@ export default function InvoicesPage() {
     clientAddress: '',
     deliveryLocation: '',
     deliveryMethod: '',
-    items: []
+    items: [],
+    subtotal: 0,
+    fees: 0,
+    transport: 0,
+    total: 0
   });
   const [isAddArticleOpen, setIsAddArticleOpen] = useState(false);
   const [newArticle, setNewArticle] = useState<Article>({
@@ -110,18 +118,39 @@ export default function InvoicesPage() {
   });
 
   const handlePreviewPDF = () => {
-    // Instead of opening a modal, we'll navigate to a new route
-    router.push(`/dashboard/invoices/preview/${createPreviewInvoice().id}`)
+    const previewInvoice = createPreviewInvoice();
+    // Stocker les données de l'aperçu de la facture dans localStorage
+    localStorage.setItem('previewInvoice', JSON.stringify(previewInvoice));
+    router.push(`/dashboard/invoices/preview/${previewInvoice.id}`);
   }
 
-  // Add this function to create a preview invoice
-  const createPreviewInvoice = (): Invoice => ({
-    ...newInvoice,
-    id: 'PREVIEW',
-    creationDate: new Date().toISOString().split('T')[0],
-    amount: total,
-    createdBy: 'Current User',
-  });
+  const createPreviewInvoice = (): Invoice => {
+    const subtotal = newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const fees = subtotal * 0.1; // 10% de frais
+    const transport = 0; // Vous pouvez ajuster cela selon vos besoins
+    const total = subtotal + fees + transport;
+
+    return {
+      id: `PREVIEW-${Date.now()}`,
+      clientName: newInvoice.clientName,
+      creationDate: new Date().toISOString().split('T')[0],
+      amount: total,
+      createdBy: 'Current User', // Remplacez par l'utilisateur actuel si disponible
+      clientPhone: newInvoice.clientPhone,
+      clientAddress: newInvoice.clientAddress,
+      deliveryLocation: newInvoice.deliveryLocation,
+      deliveryMethod: newInvoice.deliveryMethod,
+      items: newInvoice.items.map(item => ({
+        ...item,
+        unitPrice: Number(item.unitPrice),
+        total: Number(item.quantity) * Number(item.unitPrice)
+      })),
+      subtotal,
+      fees,
+      transport,
+      total
+    };
+  }
 
   const handleDownloadPDF = async () => {
     const { jsPDF } = await import('jspdf');
@@ -211,7 +240,11 @@ export default function InvoicesPage() {
       clientAddress: '',
       deliveryLocation: '',
       deliveryMethod: '',
-      items: []
+      items: [],
+      subtotal: 0,
+      fees: 0,
+      transport: 0,
+      total: 0
     });
   };
 
@@ -252,7 +285,11 @@ export default function InvoicesPage() {
       clientAddress: '',
       deliveryLocation: '',
       deliveryMethod: '',
-      items: []
+      items: [],
+      subtotal: 0,
+      fees: 0,
+      transport: 0,
+      total: 0
     });
   };
 
@@ -271,6 +308,10 @@ export default function InvoicesPage() {
       id: `FAC${(invoices.length + 1).toString().padStart(3, '0')}`,
       amount: calculateTotal(draft.items),
       createdBy: 'Current User', // Replace with actual logged-in user
+      subtotal: 0,
+      fees: 0,
+      transport: 0,
+      total: 0
     };
     setInvoices([...invoices, newInvoice]);
     setDrafts(drafts.filter(d => d.id !== draft.id));
@@ -352,7 +393,7 @@ export default function InvoicesPage() {
                       <TableHead>Nom du Client</TableHead>
                       <TableHead>Date de Création</TableHead>
                       <TableHead>Montant</TableHead>
-                      <TableHead>Créé Par</TableHead>
+                      <TableHead>Cré Par</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>

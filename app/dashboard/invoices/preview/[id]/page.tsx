@@ -257,24 +257,16 @@ function getInvoice(id: string) {
 export default function InvoicePreviewPage() {
   const params = useParams();
   const [invoice, setInvoice] = useState<any>(null);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   useEffect(() => {
-    const fetchInvoice = async () => {
-      const fetchedInvoice = getInvoice(params.id as string);
-      // Convertir toutes les URLs d'images en base64
-      const itemsWithBase64Images = await Promise.all(fetchedInvoice.items.map(async (item) => ({
-        ...item,
-        imageBase64: await getBase64FromUrl(item.image),
-      })));
-      setInvoice({...fetchedInvoice, items: itemsWithBase64Images});
-      setImagesLoaded(true);
-    };
-
-    fetchInvoice();
+    // Récupérer les données de la facture depuis localStorage
+    const storedInvoice = localStorage.getItem('previewInvoice');
+    if (storedInvoice) {
+      setInvoice(JSON.parse(storedInvoice));
+    }
   }, [params.id]);
 
-  if (!invoice || !imagesLoaded) {
+  if (!invoice) {
     return <div>Loading...</div>;
   }
 
@@ -317,17 +309,27 @@ export default function InvoicePreviewPage() {
           </View>
           {invoice.items.map((item: any, index: number) => (
             <View style={styles.tableRow} key={index}>
-              <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.num}</Text></View>
+              <View style={styles.tableColSmall}><Text style={styles.tableCell}>{index + 1}</Text></View>
               <View style={styles.tableColImage}>
-                <Image src={item.imageBase64} style={styles.itemImage} />
+                <Image src={item.imageUrl} style={styles.itemImage} />
               </View>
-              <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.qty}</Text></View>
+              <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.quantity}</Text></View>
               <View style={styles.tableColLarge}>
                 <Text style={styles.tableCellDescription}>{item.description}</Text>
               </View>
-              <View style={styles.tableColMedium}><Text style={styles.tableCell}>${item.price.toFixed(2)}</Text></View>
-              <View style={styles.tableColMedium}><Text style={styles.tableCell}>{item.weight}</Text></View>
-              <View style={styles.tableColMedium}><Text style={styles.tableCell}>${item.total.toFixed(2)}</Text></View>
+              <View style={styles.tableColMedium}>
+                <Text style={styles.tableCell}>
+                  ${typeof item.unitPrice === 'number' ? item.unitPrice.toFixed(2) : item.unitPrice}
+                </Text>
+              </View>
+              <View style={styles.tableColMedium}>
+                <Text style={styles.tableCell}>{item.weightCbm}</Text>
+              </View>
+              <View style={styles.tableColMedium}>
+                <Text style={styles.tableCell}>
+                  ${typeof item.total === 'number' ? item.total.toFixed(2) : item.total}
+                </Text>
+              </View>
             </View>
           ))}
         </View>
@@ -341,19 +343,27 @@ export default function InvoicePreviewPage() {
           <View style={styles.calculationSection}>
             <View style={styles.calculationRow}>
               <Text style={styles.calculationLabel}>SOUS-TOTAL</Text>
-              <Text style={styles.calculationValue}>${invoice.subtotal.toFixed(2)}</Text>
+              <Text style={styles.calculationValue}>
+                ${invoice.subtotal ? invoice.subtotal.toFixed(2) : '0.00'}
+              </Text>
             </View>
             <View style={styles.calculationRow}>
               <Text style={styles.calculationLabel}>FRAIS (10%)</Text>
-              <Text style={styles.calculationValue}>${invoice.fees.toFixed(2)}</Text>
+              <Text style={styles.calculationValue}>
+                ${invoice.fees ? invoice.fees.toFixed(2) : '0.00'}
+              </Text>
             </View>
             <View style={styles.calculationRow}>
               <Text style={styles.calculationLabel}>TRANSPORT & DOUANE</Text>
-              <Text style={styles.calculationValue}>${invoice.transport.toFixed(2)}</Text>
+              <Text style={styles.calculationValue}>
+                ${invoice.transport ? invoice.transport.toFixed(2) : '0.00'}
+              </Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalRowLabel}>TOTAL GENERALE</Text>
-              <Text style={styles.totalRowValue}>${invoice.total.toFixed(2)}</Text>
+              <Text style={styles.totalRowValue}>
+                ${invoice.total ? invoice.total.toFixed(2) : '0.00'}
+              </Text>
             </View>
           </View>
         </View>
