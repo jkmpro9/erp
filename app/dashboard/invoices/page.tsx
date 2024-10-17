@@ -8,15 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
-import { Link, Pencil, Trash } from 'lucide-react';
+import { Link, Pencil, Trash, FileText } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation'
-// Dynamically import jsPDF with ssr: false
-// const JsPDF = dynamic(() => import('jspdf').then(mod => mod.default), { ssr: false });  
 
-// Dynamically import PDFViewer and InvoicePDF components
 const PDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFViewer), { ssr: false });
 const InvoicePDF = dynamic(() => import('@/components/InvoicePDF'), { ssr: false });
 
@@ -50,6 +47,11 @@ interface Client {
   city: string;
 }
 
+interface Draft extends Omit<Invoice, 'id' | 'creationDate' | 'amount' | 'createdBy'> {
+  id: string;
+  creationDate: string;
+}
+
 const clientList: Client[] = [
   { id: 'CL001', name: 'Acme Corp', phone: '123-456-7890', address: '123 Main St', city: 'New York' },
   { id: 'CL002', name: 'GlobalTech', phone: '098-765-4321', address: '456 Oak Ave', city: 'San Francisco' },
@@ -58,11 +60,12 @@ const clientList: Client[] = [
 
 export default function InvoicesPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'drafts'>('list');
   const [invoices, setInvoices] = useState<Invoice[]>([
     { id: 'FAC001', clientName: 'Acme Corp', creationDate: '2023-06-01', amount: 5000, createdBy: 'John Doe', clientPhone: '123-456-7890', clientAddress: '123 Main St', deliveryLocation: 'New York', deliveryMethod: 'Air', items: [] },
     { id: 'FAC002', clientName: 'GlobalTech', creationDate: '2023-06-05', amount: 7500, createdBy: 'Jane Smith', clientPhone: '098-765-4321', clientAddress: '456 Oak Ave', deliveryLocation: 'San Francisco', deliveryMethod: 'Sea', items: [] },
   ]);
+  const [drafts, setDrafts] = useState<Draft[]>([]);
   const [newInvoice, setNewInvoice] = useState<Omit<Invoice, 'id' | 'creationDate' | 'amount' | 'createdBy'>>({
     clientName: '',
     clientPhone: '',
@@ -108,8 +111,7 @@ export default function InvoicesPage() {
   });
 
   const handleDownloadPDF = async () => {
-    // Dynamically import jsPDF only when needed
-    const jsPDF = (await import('jspdf')).default;
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF();
     
     // Add content to the PDF
@@ -224,6 +226,47 @@ export default function InvoicesPage() {
     setNewInvoice({ ...newInvoice, items: updatedItems });
   };
 
+  const handleCreateDraft = () => {
+    const newDraft: Draft = {
+      ...newInvoice,
+      id: `DRAFT${Date.now()}`,
+      creationDate: new Date().toISOString().split('T')[0],
+    };
+    setDrafts([...drafts, newDraft]);
+    setNewInvoice({
+      clientName: '',
+      clientPhone: '',
+      clientAddress: '',
+      deliveryLocation: '',
+      deliveryMethod: '',
+      items: []
+    });
+  };
+
+  const handleEditDraft = (draft: Draft) => {
+    setNewInvoice(draft);
+    setActiveTab('create');
+  };
+
+  const handleDeleteDraft = (draftId: string) => {
+    setDrafts(drafts.filter(draft => draft.id !== draftId));
+  };
+
+  const handleConvertDraftToInvoice = (draft: Draft) => {
+    const newInvoice: Invoice = {
+      ...draft,
+      id: `FAC${(invoices.length + 1).toString().padStart(3, '0')}`,
+      amount: calculateTotal(draft.items),
+      createdBy: 'Current User', // Replace with actual logged-in user
+    };
+    setInvoices([...invoices, newInvoice]);
+    setDrafts(drafts.filter(d => d.id !== draft.id));
+  };
+
+  const calculateTotal = (items: Article[]): number => {
+    return items.reduce((total, item) => total + item.quantity * item.unitPrice, 0);
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Gestion des Factures</h1>
@@ -248,6 +291,13 @@ export default function InvoicesPage() {
                 >
                   Créer une Facture
                 </Button>
+                <Button
+                  variant={activeTab === 'drafts' ? 'default' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => setActiveTab('drafts')}
+                >
+                  Brouillons
+                </Button>
               </nav>
             </CardContent>
           </Card>
@@ -269,6 +319,7 @@ export default function InvoicesPage() {
                       <TableHead>Date de Création</TableHead>
                       <TableHead>Montant</TableHead>
                       <TableHead>Créé Par</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -279,6 +330,54 @@ export default function InvoicesPage() {
                         <TableCell>{invoice.creationDate}</TableCell>
                         <TableCell>{invoice.amount.toFixed(2)} €</TableCell>
                         <TableCell>{invoice.createdBy}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" onClick={() => handlePreviewPDF()}>
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDownloadPDF()}>
+                            <Link className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'drafts' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Liste des Brouillons</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID Brouillon</TableHead>
+                      <TableHead>Nom du Client</TableHead>
+                      <TableHead>Date de Création</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {drafts.map((draft) => (
+                      <TableRow key={draft.id}>
+                        <TableCell>{draft.id}</TableCell>
+                        <TableCell>{draft.clientName}</TableCell>
+                        <TableCell>{draft.creationDate}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" onClick={() => handleEditDraft(draft)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteDraft(draft.id)}>
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleConvertDraftToInvoice(draft)}>
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -534,11 +633,12 @@ export default function InvoicesPage() {
 
                     {/* Action Buttons */}
                     <div className="space-y-2">
-                      <Button onClick={handleCreateInvoice} className="w-full bg-blue-600 hover:bg-blue-700 text-white">Créer la Facture</Button>
-                      <Button variant="outline" className="w-full text-gray-300 border-gray-600 hover:bg-gray-700">Sauvegarder Facture</Button>
-                      <Button variant="secondary" className="w-full bg-gray-700 text-white hover:bg-gray-600">Charger Facture</Button>
-                      <Button onClick={handlePreviewPDF} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                        APERÇU ET TÉLÉCHARGER PDF
+                      <Button onClick={handleCreateDraft} className="w-full bg-blue-600 hover:bg-blue-700 text-white">Créer un Brouillon</Button>
+                      <Button onClick={handlePreviewPDF} className="w-full bg-green-600 hover:bg-green-700 text-white">
+                        APERÇU PDF
+                      </Button>
+                      <Button onClick={handleDownloadPDF} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                        TÉLÉCHARGER PDF
                       </Button>
                     </div>
                   </div>
