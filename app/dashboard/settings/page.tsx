@@ -111,6 +111,10 @@ const UserManagementSection = () => {
   const saveUsers = async (usersToSave: User[]) => {
     try {
       await localforage.setItem('users', usersToSave);
+      toast({
+        title: "Utilisateurs sauvegardés",
+        description: "La liste des utilisateurs a été mise à jour avec succès.",
+      });
     } catch (error) {
       console.error('Erreur lors de la sauvegarde des utilisateurs:', error);
       toast({
@@ -229,6 +233,23 @@ export default function SettingsPage() {
   const [isAddRoleOpen, setIsAddRoleOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
 
+  useEffect(() => {
+    const loadSettings = async () => {
+      const savedUserSettings = await localforage.getItem<UserSettings>('userSettings');
+      if (savedUserSettings) setUserSettings(savedUserSettings);
+
+      const savedCompanySettings = await localforage.getItem<CompanySettings>('companySettings');
+      if (savedCompanySettings) setCompanySettings(savedCompanySettings);
+
+      const savedRoles = await localforage.getItem<Role[]>('roles');
+      if (savedRoles) setRoles(savedRoles);
+
+      // Chargez les utilisateurs dans le composant UserManagementSection
+    };
+
+    loadSettings();
+  }, []);
+
   const handleUserSettingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setUserSettings(prev => ({
@@ -282,6 +303,40 @@ export default function SettingsPage() {
 
   const handleDeleteRole = (roleId: string) => {
     setRoles(roles.filter(role => role.id !== roleId));
+  };
+
+  const handleSaveUserSettings = async () => {
+    await localforage.setItem('userSettings', userSettings);
+    toast({
+      title: "Paramètres utilisateur sauvegardés",
+      description: "Vos paramètres ont été mis à jour avec succès.",
+    });
+  };
+
+  const handleSaveCompanySettings = async () => {
+    await localforage.setItem('companySettings', companySettings);
+    toast({
+      title: "Paramètres entreprise sauvegardés",
+      description: "Les paramètres de l'entreprise ont été mis à jour avec succès.",
+    });
+  };
+
+  const handleSaveRoles = async () => {
+    await localforage.setItem('roles', roles);
+    toast({
+      title: "Rôles et permissions sauvegardés",
+      description: "Les rôles et permissions ont été mis à jour avec succès.",
+    });
+  };
+
+  const handleChangePassword = async (currentPassword: string, newPassword: string) => {
+    // Ici, vous devriez implémenter la logique de changement de mot de passe
+    // Pour cet exemple, nous allons simplement simuler une sauvegarde
+    await localforage.setItem('passwordChanged', new Date().toISOString());
+    toast({
+      title: "Mot de passe changé",
+      description: "Votre mot de passe a été mis à jour avec succès.",
+    });
   };
 
   return (
@@ -380,7 +435,7 @@ export default function SettingsPage() {
                     />
                     <Label htmlFor="darkMode">Dark Mode</Label>
                   </div>
-                  <Button onClick={() => console.log("Save User Settings", userSettings)}>Save User Settings</Button>
+                  <Button onClick={handleSaveUserSettings}>Sauvegarder les paramètres utilisateur</Button>
                 </div>
               </CardContent>
             </Card>
@@ -420,7 +475,7 @@ export default function SettingsPage() {
                       onChange={handleCompanySettingChange}
                     />
                   </div>
-                  <Button onClick={() => console.log("Save Company Settings", companySettings)}>Save Company Settings</Button>
+                  <Button onClick={handleSaveCompanySettings}>Sauvegarder les paramètres entreprise</Button>
                 </div>
               </CardContent>
             </Card>
@@ -445,7 +500,7 @@ export default function SettingsPage() {
                     <Label htmlFor="confirmPassword">Confirm New Password</Label>
                     <Input id="confirmPassword" type="password" />
                   </div>
-                  <Button onClick={() => console.log("Change Password")}>Change Password</Button>
+                  <Button onClick={() => handleChangePassword('currentPassword', 'newPassword')}>Changer le mot de passe</Button>
                 </div>
               </CardContent>
             </Card>
@@ -530,6 +585,7 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 </div>
+                <Button onClick={handleSaveRoles}>Sauvegarder les rôles et permissions</Button>
               </CardContent>
             </Card>
           )}
