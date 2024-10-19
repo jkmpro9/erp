@@ -62,8 +62,10 @@ interface Client {
 }
 
 interface Draft extends Omit<Invoice, 'id' | 'creationDate' | 'amount' | 'createdBy'> {
+  createdBy: string;
   id: string;
   creationDate: string;
+  lastModified: string; // Ajoutez cette ligne
 }
 
 export default function InvoicesPage() {
@@ -325,10 +327,12 @@ export default function InvoicesPage() {
   };
 
   const handleCreateDraft = async () => {
+    const currentDate = new Date().toISOString();
     const newDraft: Draft = {
       ...newInvoice,
       id: `DRAFT${Date.now()}`,
-      creationDate: new Date().toISOString().split('T')[0],
+      creationDate: currentDate.split('T')[0],
+      lastModified: currentDate, // Ajoutez cette ligne
     };
     const updatedDrafts = [...drafts, newDraft];
     setDrafts(updatedDrafts);
@@ -347,9 +351,9 @@ export default function InvoicesPage() {
       createdBy: '', // Ajoutez cette ligne
     });
   };
-
   const handleEditDraft = (draft: Draft) => {
-    setNewInvoice(draft);
+    const draftWithCreatedBy = { ...draft, createdBy: draft.createdBy || '' };
+    setNewInvoice(draftWithCreatedBy);
     setActiveTab('create');
   };
 
@@ -597,6 +601,7 @@ export default function InvoicesPage() {
                       <TableHead>ID Brouillon</TableHead>
                       <TableHead>Nom du Client</TableHead>
                       <TableHead>Date de Création</TableHead>
+                      <TableHead>Dernière Modification</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -606,6 +611,7 @@ export default function InvoicesPage() {
                         <TableCell>{draft.id}</TableCell>
                         <TableCell>{draft.clientName}</TableCell>
                         <TableCell>{draft.creationDate}</TableCell>
+                        <TableCell>{new Date(draft.lastModified).toLocaleString()}</TableCell>
                         <TableCell>
                           <Button variant="ghost" size="sm" onClick={() => handleEditDraft(draft)}>
                             <Pencil className="h-4 w-4" />
