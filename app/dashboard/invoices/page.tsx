@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation'
 import localforage from '@/lib/localForage';
@@ -106,6 +106,9 @@ export default function InvoicesPage() {
   const [clients, setClients] = useState<Client[]>([]);
 
   const [showPDFViewer, setShowPDFViewer] = useState(false);
+
+  const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fonction de filtrage
   const filteredInvoices = invoices.filter((invoice) => {
@@ -411,6 +414,25 @@ export default function InvoicesPage() {
       title: "Nouvelle facture",
       description: "Le formulaire a été réinitialisé pour une nouvelle facture.",
     });
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Ici, vous pouvez ajouter la logique pour traiter le fichier CSV
+      console.log("Fichier sélectionné:", file.name);
+      // TODO: Ajouter la logique pour lire et traiter le fichier CSV
+    }
+  };
+
+  const handleFileUploadClick = () => {
+    setIsFileUploadOpen(true);
+  };
+
+  const handleFileUploadConfirm = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   return (
@@ -835,8 +857,8 @@ export default function InvoicesPage() {
                       <Button onClick={handlePreviewPDF} className="w-full bg-green-600 hover:bg-green-700 text-white">
                         APERÇU PDF
                       </Button>
-                      <Button onClick={handleDownloadPDF} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                        TÉLÉCHARGER PDF
+                      <Button onClick={handleFileUploadClick} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                        CHARGER FICHIER
                       </Button>
                       <Button onClick={handleResetInvoice} className="w-full bg-gray-600 hover:bg-gray-700 text-white">
                         NOUVELLE FACTURE
@@ -863,6 +885,30 @@ export default function InvoicesPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={isFileUploadOpen} onOpenChange={setIsFileUploadOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Charger un fichier CSV</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center p-6">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".csv"
+              style={{ display: 'none' }}
+            />
+            <Button onClick={handleFileUploadConfirm}>Sélectionner un fichier</Button>
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setIsFileUploadOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleFileUploadConfirm}>Charger</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
