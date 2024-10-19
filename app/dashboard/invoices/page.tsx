@@ -118,6 +118,8 @@ export default function InvoicesPage() {
   const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [isEditingDraft, setIsEditingDraft] = useState(false);
+
   // Fonction de filtrage
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch = invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -352,8 +354,12 @@ export default function InvoicesPage() {
     });
   };
   const handleEditDraft = (draft: Draft) => {
-    const draftWithCreatedBy = { ...draft, createdBy: draft.createdBy || '' };
-    setNewInvoice(draftWithCreatedBy);
+    const updatedDraft = { 
+      ...draft, 
+      lastModified: new Date().toISOString() 
+    };
+    setNewInvoice(updatedDraft);
+    setIsEditingDraft(true);
     setActiveTab('create');
   };
 
@@ -487,6 +493,39 @@ export default function InvoicesPage() {
 
   const handleVendorChange = (value: string) => {
     setNewInvoice(prev => ({ ...prev, createdBy: value }));
+  };
+
+  const handleCreateOrUpdateDraft = async () => {
+    const currentDate = new Date().toISOString();
+    if (isEditingDraft) {
+      // Mise à jour du brouillon existant
+      const updatedDrafts = drafts.map(draft => 
+        draft.id === newInvoice.id ? { ...newInvoice, lastModified: currentDate } : draft
+      );
+      setDrafts(updatedDrafts);
+      await localforage.setItem('drafts', updatedDrafts);
+      toast({
+        title: "Brouillon mis à jour",
+        description: "Le brouillon a été mis à jour avec succès.",
+      });
+    } else {
+      // Création d'un nouveau brouillon
+      const newDraft: Draft = {
+        ...newInvoice,
+        id: `DRAFT${Date.now()}`,
+        creationDate: currentDate.split('T')[0],
+        lastModified: currentDate,
+      };
+      const updatedDrafts = [...drafts, newDraft];
+      setDrafts(updatedDrafts);
+      await localforage.setItem('drafts', updatedDrafts);
+      toast({
+        title: "Brouillon créé",
+        description: "Un nouveau brouillon a été créé avec succès.",
+      });
+    }
+    setIsEditingDraft(false);
+    handleResetInvoice();
   };
 
   return (
@@ -917,7 +956,12 @@ export default function InvoicesPage() {
 
                     {/* Action Buttons */}
                     <div className="space-y-2">
-                      <Button onClick={handleCreateDraft} className="w-full bg-blue-600 hover:bg-blue-700 text-white">Créer un Brouillon</Button>
+                      <Button 
+                        onClick={handleCreateOrUpdateDraft} 
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        {isEditingDraft ? "Modifier le Brouillon" : "Créer un Brouillon"}
+                      </Button>
                       <Button onClick={handlePreviewPDF} className="w-full bg-green-600 hover:bg-green-700 text-white">
                         APERÇU PDF
                       </Button>

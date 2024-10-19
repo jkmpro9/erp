@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,8 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { UserManagement } from '../components/UserManagement';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { toast } from '@/hooks/use-toast';
+import localforage from 'localforage';
 
 interface UserSettings {
   username: string;
@@ -38,6 +39,171 @@ const availablePermissions = [
   { id: 'edit_settings', label: 'Edit Settings' },
   { id: 'manage_users', label: 'Manage Users' },
 ];
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+const UserManagementSection = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [newUser, setNewUser] = useState<Omit<User, 'id'>>({ name: '', email: '', role: 'user' });
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Charger les utilisateurs depuis localforage au chargement du composant
+    const loadUsers = async () => {
+      const savedUsers = await localforage.getItem<User[]>('users');
+      if (savedUsers) {
+        setUsers(savedUsers);
+      }
+    };
+    loadUsers();
+  }, []);
+
+  const handleAddUser = async () => {
+    const newUserWithId = { ...newUser, id: Date.now().toString() };
+    const updatedUsers = [...users, newUserWithId];
+    setUsers(updatedUsers);
+    await saveUsers(updatedUsers);
+    setNewUser({ name: '', email: '', role: 'user' });
+    setIsAddUserOpen(false);
+    toast({
+      title: "Utilisateur ajouté",
+      description: "Le nouvel utilisateur a été ajouté avec succès.",
+    });
+  };
+
+  const handleEditUser = async (user: User) => {
+    setEditingUser(user);
+    setNewUser({ name: user.name, email: user.email, role: user.role });
+    setIsAddUserOpen(true);
+  };
+
+  const handleUpdateUser = async () => {
+    if (editingUser) {
+      const updatedUsers = users.map(u => u.id === editingUser.id ? { ...editingUser, ...newUser } : u);
+      setUsers(updatedUsers);
+      await saveUsers(updatedUsers);
+      setEditingUser(null);
+      setNewUser({ name: '', email: '', role: 'user' });
+      setIsAddUserOpen(false);
+      toast({
+        title: "Utilisateur mis à jour",
+        description: "Les informations de l'utilisateur ont été mises à jour avec succès.",
+      });
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    const updatedUsers = users.filter(user => user.id !== userId);
+    setUsers(updatedUsers);
+    await saveUsers(updatedUsers);
+    toast({
+      title: "Utilisateur supprimé",
+      description: "L'utilisateur a été supprimé avec succès.",
+    });
+  };
+
+  const saveUsers = async (usersToSave: User[]) => {
+    try {
+      await localforage.setItem('users', usersToSave);
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde des utilisateurs:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la sauvegarde des utilisateurs.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Gestion des Utilisateurs</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Button onClick={() => setIsAddUserOpen(true)}>Ajouter un Utilisateur</Button>
+        <table className="w-full mt-4">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Email</th>
+              <th>Rôle</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td>{user.name}</td>
+                <td>{user.email}</td>
+                <td>{user.role}</td>
+                <td>
+                  <Button variant="outline" onClick={() => handleEditUser(user)}>Modifier</Button>
+                  <Button variant="destructive" onClick={() => handleDeleteUser(user.id)}>Supprimer</Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingUser ? 'Modifier l\'Utilisateur' : 'Ajouter un Nouvel Utilisateur'}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">Nom</Label>
+                <Input
+                  id="name"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="role" className="text-right">Rôle</Label>
+                <Select
+                  value={newUser.role}
+                  onValueChange={(value) => setNewUser({...newUser, role: value})}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Sélectionner un rôle" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="user">Utilisateur</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={editingUser ? handleUpdateUser : handleAddUser}>
+                {editingUser ? 'Mettre à jour' : 'Ajouter'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'user' | 'company' | 'security' | 'roles' | 'users'>('user');
@@ -369,7 +535,7 @@ export default function SettingsPage() {
           )}
 
           {activeTab === 'users' && (
-            <UserManagement />
+            <UserManagementSection />
           )}
         </div>
       </div>
