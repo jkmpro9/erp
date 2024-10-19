@@ -75,14 +75,12 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   mainContent: {
-    marginTop: 20,
-    marginBottom: 100, // Ajoutez cette ligne pour créer un espace en bas
+    flexGrow: 1,
   },
   clientInfoSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
-    marginTop: 20,
   },
   clientInfoColumn: {
     width: '48%',
@@ -400,8 +398,8 @@ const InvoicePreviewPage: React.FC = () => {
 
     return (
       <Document>
-        <Page size="A4" style={styles.page} wrap>
-          <View style={styles.header} fixed={false}>
+        <Page size="A4" style={styles.page}>
+          <View style={styles.header}>
             <View style={styles.headerLeft}>
               <Text style={styles.companyName}>COCCINELLE</Text>
               <Text style={styles.companyInfo}>44, Kokolo, Q/Mbinza Pigeon, C/Ngaliema - Kinshasa</Text>
@@ -425,8 +423,7 @@ const InvoicePreviewPage: React.FC = () => {
           </View>
 
           <View style={styles.mainContent}>
-            {/* Remontée de la section des informations du client */}
-            <View style={[styles.clientInfoSection, { marginTop: 10 }]}>
+            <View style={styles.clientInfoSection}>
               <View style={styles.clientInfoColumn}>
                 <View style={styles.clientInfoRow}>
                   <Text style={styles.label}>CLIENT(E):</Text>
