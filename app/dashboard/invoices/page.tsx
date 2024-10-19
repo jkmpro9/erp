@@ -71,7 +71,7 @@ export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState<'list' | 'create' | 'drafts'>('list');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [drafts, setDrafts] = useState<Draft[]>([]);
-  const [newInvoice, setNewInvoice] = useState<Omit<Invoice, 'id' | 'creationDate' | 'amount' | 'createdBy'>>({
+  const [newInvoice, setNewInvoice] = useState<Omit<Invoice, 'id' | 'creationDate' | 'amount'>>({
     clientName: '',
     clientPhone: '',
     clientAddress: '',
@@ -81,7 +81,8 @@ export default function InvoicesPage() {
     subtotal: 0,
     fees: 0,
     transport: 0,
-    total: 0
+    total: 0,
+    createdBy: '', // Ajoutez cette ligne
   });
   const [isAddArticleOpen, setIsAddArticleOpen] = useState(false);
   const [newArticle, setNewArticle] = useState<Article>({
@@ -163,7 +164,7 @@ export default function InvoicesPage() {
       feePercentage: feePercentage,
       transport: transport,
       total: total,
-      createdBy: "NOM DU VENDEUR ACTUEL" // Remplacez ceci par le nom réel du vendeur connecté ou une valeur par défaut
+      createdBy: newInvoice.createdBy // Utilisez la valeur choisie par l'utilisateur
     };
 
     console.log('Preview Invoice:', previewInvoice);
@@ -294,7 +295,8 @@ export default function InvoicesPage() {
       subtotal: 0,
       fees: 0,
       transport: 0,
-      total: 0
+      total: 0,
+      createdBy: '', // Ajoutez cette ligne
     });
   };
 
@@ -341,7 +343,8 @@ export default function InvoicesPage() {
       subtotal: 0,
       fees: 0,
       transport: 0,
-      total: 0
+      total: 0,
+      createdBy: '', // Ajoutez cette ligne
     });
   };
 
@@ -407,7 +410,8 @@ export default function InvoicesPage() {
       subtotal: 0,
       fees: 0,
       transport: 0,
-      total: 0
+      total: 0,
+      createdBy: '', // Ajoutez cette ligne
     });
     setSubtotal(0);
     setFees(0);
@@ -475,6 +479,10 @@ export default function InvoicesPage() {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
+  };
+
+  const handleVendorChange = (value: string) => {
+    setNewInvoice(prev => ({ ...prev, createdBy: value }));
   };
 
   return (
@@ -707,6 +715,19 @@ export default function InvoicesPage() {
                             <SelectContent>
                               <SelectItem value="air">Air</SelectItem>
                               <SelectItem value="sea">Mer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="vendor">Vendeur</Label>
+                          <Select onValueChange={handleVendorChange} value={newInvoice.createdBy}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionner le vendeur" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="John Doe">John Doe</SelectItem>
+                              <SelectItem value="Jane Smith">Jane Smith</SelectItem>
+                              {/* Ajoutez d'autres vendeurs selon vos besoins */}
                             </SelectContent>
                           </Select>
                         </div>
