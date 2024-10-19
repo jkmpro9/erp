@@ -15,6 +15,11 @@ import { Link, Pencil, Trash, FileText, Search } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { toast } from '@/hooks/use-toast';
+import Papa from 'papaparse'; // Assurez-vous d'installer papaparse : npm install papaparse @types/papaparse
+import { getBase64FromUrl } from '@/utils/imageUtils'; // Assurez-vous d'avoir cette fonction utilitaire
+
+// Ajoutez cette ligne après les imports
+const DEFAULT_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
 // Importez dynamiquement le composant de prévisualisation PDF
 const DynamicInvoicePDFViewer = dynamic(() => import('../invoices/preview/[id]/page'), {
@@ -416,12 +421,49 @@ export default function InvoicesPage() {
     });
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Ici, vous pouvez ajouter la logique pour traiter le fichier CSV
-      console.log("Fichier sélectionné:", file.name);
-      // TODO: Ajouter la logique pour lire et traiter le fichier CSV
+      Papa.parse(file, {
+        complete: async (result) => {
+          const parsedData = result.data as string[][];
+          // Ignorer la première ligne (en-têtes)
+          const items = await Promise.all(parsedData.slice(1).map(async (row) => {
+            let imageUrl = row[1];
+            try {
+              // Convertir l'URL de l'image en base64
+              const base64Image = await getBase64FromUrl(imageUrl);
+              imageUrl = base64Image;
+            } catch (error) {
+              console.error('Error loading image:', error);
+              imageUrl = DEFAULT_IMAGE; // Utilisez une image par défaut en cas d'erreur
+            }
+            return {
+              imageUrl: imageUrl,
+              quantity: parseInt(row[2].trim(), 10),
+              description: row[3],
+              unitPrice: parseFloat(row[4].replace('$', '').trim()),
+              weightCbm: parseFloat(row[5]),
+              total: parseFloat(row[6].replace('$', '').trim()),
+              itemLink: row[7]
+            };
+          }));
+
+          setNewInvoice(prevInvoice => ({
+            ...prevInvoice,
+            items: items
+          }));
+
+          console.log("Données CSV chargées:", items);
+          setIsFileUploadOpen(false);
+          toast({
+            title: "Fichier chargé avec succès",
+            description: `${items.length} articles ont été ajoutés à la facture.`,
+          });
+        },
+        header: false,
+        skipEmptyLines: true
+      });
     }
   };
 

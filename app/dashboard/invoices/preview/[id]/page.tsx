@@ -334,18 +334,22 @@ const InvoicePreviewPage: React.FC = () => {
       const storedInvoice = localStorage.getItem('previewInvoice');
       if (storedInvoice) {
         const parsedInvoice = JSON.parse(storedInvoice);
-        console.log('Parsed invoice:', parsedInvoice); // Ajoutez ce log pour déboguer
+        console.log('Parsed invoice:', parsedInvoice);
         
         // Convertir toutes les URLs d'images en base64
         const itemsWithBase64Images = await Promise.all(
           parsedInvoice.items.map(async (item: any) => {
-            if (item.imageUrl) {
-              console.log('Processing image URL:', item.imageUrl);
-              const base64Image = await getBase64FromUrl(item.imageUrl);
+            console.log('Processing item:', item); // Ajoutez ce log pour voir la structure de chaque item
+            const imageUrl = item.imageUrl || item.image || item.img || DEFAULT_IMAGE; // Ajout de 'img' comme autre possibilité
+            console.log('Processing image URL:', imageUrl);
+            try {
+              const base64Image = await getBase64FromUrl(imageUrl);
               console.log('Base64 image loaded:', !!base64Image);
               return { ...item, imageUrl: base64Image };
+            } catch (error) {
+              console.error('Error loading image:', error);
+              return { ...item, imageUrl: DEFAULT_IMAGE };
             }
-            return { ...item, imageUrl: DEFAULT_IMAGE };
           })
         );
 
@@ -395,8 +399,8 @@ const InvoicePreviewPage: React.FC = () => {
 
     return (
       <Document>
-        <Page size="A4" style={styles.page}>
-          <View style={styles.header} fixed>
+        <Page size="A4" style={styles.page} wrap>
+          <View style={styles.header} fixed={false}>
             <View style={styles.headerLeft}>
               <Text style={styles.companyName}>COCCINELLE</Text>
               <Text style={styles.companyInfo}>44, Kokolo, Q/Mbinza Pigeon, C/Ngaliema - Kinshasa</Text>
@@ -471,7 +475,7 @@ const InvoicePreviewPage: React.FC = () => {
                 ]} key={index}>
                   <View style={styles.tableColSmall}><Text style={styles.tableCell}>{index + 1}</Text></View>
                   <View style={styles.tableColImage}>
-                    <Image src={item.imageUrl || DEFAULT_IMAGE} style={styles.itemImage} />
+                    <Image src={item.imageUrl} style={styles.itemImage} />
                   </View>
                   <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.quantity}</Text></View>
                   <View style={styles.tableColLarge}>
@@ -521,13 +525,15 @@ const InvoicePreviewPage: React.FC = () => {
             </View>
           </View>
 
-          {/* Déplacez le footer à la fin de la Page */}
-          <View style={styles.footerSection} fixed>
-            <Text style={styles.footerText}>EQUITY BCDC | 00011105023-32000099901-60 | COCCINELLE RAWBANK | 04011-04410018001-91 |</Text>
-            <Text style={styles.footerText}>COCCINELLE SARL</Text>
-            <Text style={styles.footerText}>RCCM: CD/KNG/RCCM/21-B-02464 | ID.NAT: 01-4300-N89711B | IMPOT: A2173499P</Text>
-            <Text style={styles.footerText}>Email: sales@coccinelledrc.com | Site Web: www.coccinelledrc.com</Text>
-          </View>
+          <View style={styles.footer} fixed={false} render={({ pageNumber }) => (
+            <View style={styles.footerSection}>
+              <Text style={styles.footerText}>Page {pageNumber}</Text>
+              <Text style={styles.footerText}>EQUITY BCDC | 00011105023-32000099901-60 | COCCINELLE RAWBANK | 04011-04410018001-91 |</Text>
+              <Text style={styles.footerText}>COCCINELLE SARL</Text>
+              <Text style={styles.footerText}>RCCM: CD/KNG/RCCM/21-B-02464 | ID.NAT: 01-4300-N89711B | IMPOT: A2173499P</Text>
+              <Text style={styles.footerText}>Email: sales@coccinelledrc.com | Site Web: www.coccinelledrc.com</Text>
+            </View>
+          )} />
         </Page>
       </Document>
     );
