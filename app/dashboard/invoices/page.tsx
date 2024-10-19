@@ -1,6 +1,9 @@
 "use client"
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation'
+import localforage from '@/lib/localForage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,12 +14,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Link, Pencil, Trash, FileText, Search } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation'
-import localforage from '@/lib/localForage';
 
-const PDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFViewer), { ssr: false });
-const InvoicePDF = dynamic(() => import('@/components/InvoicePDF'), { ssr: false });
+// Dynamically import the InvoicePDFViewer component
+const DynamicInvoicePDFViewer = dynamic(() => import('@/components/InvoicePDFViewer'), {
+  ssr: false,
+  loading: () => <p>Loading PDF viewer...</p>
+});
 
 interface Article {
   imageUrl: string;
@@ -56,12 +59,6 @@ interface Draft extends Omit<Invoice, 'id' | 'creationDate' | 'amount' | 'create
   id: string;
   creationDate: string;
 }
-
-const clientList: Client[] = [
-  { id: 'CL001', name: 'Acme Corp', phone: '123-456-7890', address: '123 Main St', city: 'New York' },
-  { id: 'CL002', name: 'GlobalTech', phone: '098-765-4321', address: '456 Oak Ave', city: 'San Francisco' },
-  { id: 'CL003', name: 'InnovateNow', phone: '555-123-4567', address: '789 Pine Rd', city: 'Chicago' },
-];
 
 export default function InvoicesPage() {
   const router = useRouter()
@@ -105,6 +102,10 @@ export default function InvoicesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
+  const [clients, setClients] = useState<Client[]>([]);
+
+  const [showPDFViewer, setShowPDFViewer] = useState(false);
+
   // Fonction de filtrage
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch = invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -116,7 +117,7 @@ export default function InvoicesPage() {
   });
 
   useEffect(() => {
-    const loadInvoices = async () => {
+    const loadData = async () => {
       const storedInvoices = await localforage.getItem<Invoice[]>('invoices');
       if (storedInvoices) {
         setInvoices(storedInvoices);
@@ -126,16 +127,21 @@ export default function InvoicesPage() {
       if (storedDrafts) {
         setDrafts(storedDrafts);
       }
+
+      const storedClients = await localforage.getItem<Client[]>('clients');
+      if (storedClients) {
+        setClients(storedClients);
+      }
     };
 
-    loadInvoices();
+    loadData();
   }, []);
 
   const handlePreviewPDF = () => {
     const previewInvoice = createPreviewInvoice();
-    // Stocker les données de l'aperçu de la facture dans localStorage
+    setShowPDFViewer(true);
+    // You can still store the invoice data if needed
     localStorage.setItem('previewInvoice', JSON.stringify(previewInvoice));
-    router.push(`/dashboard/invoices/preview/${previewInvoice.id}`);
   }
 
   const createPreviewInvoice = (): Invoice => {
@@ -220,8 +226,8 @@ export default function InvoicesPage() {
     setNewArticle({ ...newArticle, [name]: value });
   };
 
-  const handleClientSelect = (clientName: string) => {
-    const selectedClient = clientList.find(client => client.name === clientName);
+  const handleClientSelect = (clientId: string) => {
+    const selectedClient = clients.find(client => client.id === clientId);
     if (selectedClient) {
       setNewInvoice({
         ...newInvoice,
@@ -505,8 +511,8 @@ export default function InvoicesPage() {
                               <SelectValue placeholder="Sélectionner un client" />
                             </SelectTrigger>
                             <SelectContent>
-                              {clientList.map((client) => (
-                                <SelectItem key={client.id} value={client.name}>
+                              {clients.map((client) => (
+                                <SelectItem key={client.id} value={client.id}>
                                   {client.name}
                                 </SelectItem>
                               ))}
@@ -748,6 +754,17 @@ export default function InvoicesPage() {
           )}
         </div>
       </div>
+
+      {showPDFViewer && (
+        <Dialog open={showPDFViewer} onOpenChange={setShowPDFViewer}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Invoice Preview</DialogTitle>
+            </DialogHeader>
+            <DynamicInvoicePDFViewer invoice={createPreviewInvoice()} />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

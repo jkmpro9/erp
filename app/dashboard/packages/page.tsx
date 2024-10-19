@@ -1,95 +1,156 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import localforage from '@/lib/localForage';
 
 interface Package {
   id: string;
+  clientId: string;
   trackingNumber: string;
-  clientName: string;
-  weight: number;
   status: string;
-  estimatedDelivery: string;
+  creationDate: string;
+}
+
+interface Client {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  city: string;
 }
 
 export default function PackagesPage() {
-  const [activeTab, setActiveTab] = useState<'air' | 'sea'>('air');
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [newPackage, setNewPackage] = useState<Omit<Package, 'id' | 'creationDate'>>({
+    clientId: '',
+    trackingNumber: '',
+    status: 'En attente',
+  });
 
-  // Dummy data for packages
-  const airPackages: Package[] = [
-    { id: 'AP001', trackingNumber: 'AIR123456', clientName: 'John Doe', weight: 5.2, status: 'In Transit', estimatedDelivery: '2023-06-15' },
-    { id: 'AP002', trackingNumber: 'AIR789012', clientName: 'Jane Smith', weight: 3.7, status: 'Delivered', estimatedDelivery: '2023-06-10' },
-  ];
+  useEffect(() => {
+    const loadData = async () => {
+      const storedPackages = await localforage.getItem<Package[]>('packages');
+      if (storedPackages) {
+        setPackages(storedPackages);
+      }
 
-  const seaPackages: Package[] = [
-    { id: 'SP001', trackingNumber: 'SEA123456', clientName: 'Alice Johnson', weight: 150, status: 'In Transit', estimatedDelivery: '2023-07-20' },
-    { id: 'SP002', trackingNumber: 'SEA789012', clientName: 'Bob Williams', weight: 200, status: 'At Port', estimatedDelivery: '2023-07-25' },
-  ];
+      const storedClients = await localforage.getItem<Client[]>('clients');
+      if (storedClients) {
+        setClients(storedClients);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const handleAddPackage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newId = `PKG${(packages.length + 1).toString().padStart(3, '0')}`;
+    const packageToAdd = {
+      ...newPackage,
+      id: newId,
+      creationDate: new Date().toISOString().split('T')[0],
+    };
+    const updatedPackages = [...packages, packageToAdd];
+    setPackages(updatedPackages);
+    await localforage.setItem('packages', updatedPackages);
+    setNewPackage({ clientId: '', trackingNumber: '', status: 'En attente' });
+  };
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Package Management</h1>
+      <h1 className="text-2xl font-bold mb-4">Gestion des Colis</h1>
       
-      <div className="flex">
-        {/* Left sidebar */}
-        <div className="w-64 pr-4">
-          <Card>
-            <CardContent className="p-4">
-              <nav className="space-y-2">
-                <Button
-                  variant={activeTab === 'air' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => setActiveTab('air')}
-                >
-                  Air Parcel
-                </Button>
-                <Button
-                  variant={activeTab === 'sea' ? 'default' : 'ghost'}
-                  className="w-full justify-start"
-                  onClick={() => setActiveTab('sea')}
-                >
-                  Sea Parcel
-                </Button>
-              </nav>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main content area */}
-        <div className="flex-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>{activeTab === 'air' ? 'Air Parcels' : 'Sea Parcels'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tracking Number</TableHead>
-                    <TableHead>Client Name</TableHead>
-                    <TableHead>Weight (kg)</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Estimated Delivery</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(activeTab === 'air' ? airPackages : seaPackages).map((pkg) => (
-                    <TableRow key={pkg.id}>
-                      <TableCell>{pkg.trackingNumber}</TableCell>
-                      <TableCell>{pkg.clientName}</TableCell>
-                      <TableCell>{pkg.weight}</TableCell>
-                      <TableCell>{pkg.status}</TableCell>
-                      <TableCell>{pkg.estimatedDelivery}</TableCell>
-                    </TableRow>
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>Ajouter un Nouveau Colis</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleAddPackage} className="space-y-4">
+            <div>
+              <Label htmlFor="clientId">Client</Label>
+              <Select
+                value={newPackage.clientId}
+                onValueChange={(value) => setNewPackage({ ...newPackage, clientId: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
                   ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="trackingNumber">Numéro de Suivi</Label>
+              <Input
+                id="trackingNumber"
+                value={newPackage.trackingNumber}
+                onChange={(e) => setNewPackage({ ...newPackage, trackingNumber: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="status">Statut</Label>
+              <Select
+                value={newPackage.status}
+                onValueChange={(value) => setNewPackage({ ...newPackage, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="En attente">En attente</SelectItem>
+                  <SelectItem value="En transit">En transit</SelectItem>
+                  <SelectItem value="Livré">Livré</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit">Ajouter le Colis</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Liste des Colis</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Numéro de Suivi</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Date de Création</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {packages.map((pkg) => (
+                <TableRow key={pkg.id}>
+                  <TableCell>{pkg.id}</TableCell>
+                  <TableCell>{clients.find(c => c.id === pkg.clientId)?.name || 'N/A'}</TableCell>
+                  <TableCell>{pkg.trackingNumber}</TableCell>
+                  <TableCell>{pkg.status}</TableCell>
+                  <TableCell>{pkg.creationDate}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

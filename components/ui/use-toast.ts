@@ -1,17 +1,11 @@
+import { Toast } from "@/components/ui/toast"
 import { useToast as useToastOriginal } from "@/components/ui/toast"
 
 export const useToast = useToastOriginal
 
-// Add this type
-type ToastProps = {
-  title?: string
-  description?: string
-  action?: React.ReactNode
-  // Add any other properties your toast accepts
-}
+export type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 
-// Export the toast function
-export const toast = (props: ToastProps) => {
+export const toast = (props: Omit<ToastProps, "id">) => {
   const { toast } = useToastOriginal()
-  toast(props)
+  toast(props as ToastProps)
 }
