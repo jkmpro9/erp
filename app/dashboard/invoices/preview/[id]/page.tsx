@@ -76,6 +76,7 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     marginTop: 20,
+    marginBottom: 100, // Ajoutez cette ligne pour créer un espace en bas
   },
   clientInfoSection: {
     flexDirection: 'row',
@@ -523,6 +524,9 @@ const InvoicePreviewPage: React.FC = () => {
                 </View>
               </View>
             </View>
+
+            {/* Ajoutez cet élément View pour créer un espace supplémentaire */}
+            <View style={{ marginBottom: 50 }} />
           </View>
 
           <View style={styles.footer} fixed={false} render={({ pageNumber }) => (

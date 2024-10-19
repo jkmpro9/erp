@@ -716,54 +716,10 @@ export default function InvoicesPage() {
                     {/* Articles */}
                     <div className="flex justify-between items-center">
                       <h3 className="text-lg font-semibold mb-2">Articles</h3>
-                      <Button 
-                        variant="outline" 
-                        onClick={handleResetInvoice}
-                        className="mb-2"
-                      >
-                        Nouvelle Facture
-                      </Button>
                     </div>
                     <div>
                       <div className="flex justify-between mb-2">
                         <Button variant="destructive" onClick={handleRemoveAllItems}>Effacer tous les Articles</Button>
-                        <Dialog open={isAddArticleOpen} onOpenChange={setIsAddArticleOpen}>
-                          <DialogTrigger asChild>
-                            <Button variant="outline">Ajouter un Article</Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>{editingItemIndex !== null ? 'Modifier l\'Article' : 'Ajouter un Nouveau Article'}</DialogTitle>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="imageUrl" className="text-right">URL de l'Image</Label>
-                                <Input id="imageUrl" name="imageUrl" value={newArticle.imageUrl} onChange={handleInputChange} className="col-span-3" />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="description" className="text-right">Description</Label>
-                                <Input id="description" name="description" value={newArticle.description} onChange={handleInputChange} className="col-span-3" />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="quantity" className="text-right">Quantité</Label>
-                                <Input id="quantity" name="quantity" type="number" value={newArticle.quantity} onChange={handleInputChange} className="col-span-3" />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="unitPrice" className="text-right">Prix Unitaire</Label>
-                                <Input id="unitPrice" name="unitPrice" type="number" value={newArticle.unitPrice} onChange={handleInputChange} className="col-span-3" />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="weightCbm" className="text-right">Poids/CBM</Label>
-                                <Input id="weightCbm" name="weightCbm" type="number" value={newArticle.weightCbm} onChange={handleInputChange} className="col-span-3" />
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="itemLink" className="text-right">Lien de l'Article</Label>
-                                <Input id="itemLink" name="itemLink" value={newArticle.itemLink} onChange={handleInputChange} className="col-span-3" />
-                              </div>
-                            </div>
-                            <Button onClick={handleUpdateItem}>{editingItemIndex !== null ? 'Mettre à jour l\'Article' : 'Ajouter l\'Article'}</Button>
-                          </DialogContent>
-                        </Dialog>
                       </div>
                       <Table>
                         <TableHeader>
@@ -828,6 +784,45 @@ export default function InvoicesPage() {
                           ))}
                         </TableBody>
                       </Table>
+                      <div className="flex justify-end mt-4">
+                        <Dialog open={isAddArticleOpen} onOpenChange={setIsAddArticleOpen}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline">Ajouter un Article</Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>{editingItemIndex !== null ? 'Modifier l\'Article' : 'Ajouter un Nouveau Article'}</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="imageUrl" className="text-right">URL de l'Image</Label>
+                                <Input id="imageUrl" name="imageUrl" value={newArticle.imageUrl} onChange={handleInputChange} className="col-span-3" />
+                              </div>
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="description" className="text-right">Description</Label>
+                                <Input id="description" name="description" value={newArticle.description} onChange={handleInputChange} className="col-span-3" />
+                              </div>
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="quantity" className="text-right">Quantité</Label>
+                                <Input id="quantity" name="quantity" type="number" value={newArticle.quantity} onChange={handleInputChange} className="col-span-3" />
+                              </div>
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="unitPrice" className="text-right">Prix Unitaire</Label>
+                                <Input id="unitPrice" name="unitPrice" type="number" value={newArticle.unitPrice} onChange={handleInputChange} className="col-span-3" />
+                              </div>
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="weightCbm" className="text-right">Poids/CBM</Label>
+                                <Input id="weightCbm" name="weightCbm" type="number" value={newArticle.weightCbm} onChange={handleInputChange} className="col-span-3" />
+                              </div>
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="itemLink" className="text-right">Lien de l'Article</Label>
+                                <Input id="itemLink" name="itemLink" value={newArticle.itemLink} onChange={handleInputChange} className="col-span-3" />
+                              </div>
+                            </div>
+                            <Button onClick={handleUpdateItem}>{editingItemIndex !== null ? 'Mettre à jour l\'Article' : 'Ajouter l\'Article'}</Button>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </div>
                   </div>
 
@@ -901,9 +896,6 @@ export default function InvoicesPage() {
                       </Button>
                       <Button onClick={handleFileUploadClick} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
                         CHARGER FICHIER
-                      </Button>
-                      <Button onClick={handleResetInvoice} className="w-full bg-gray-600 hover:bg-gray-700 text-white">
-                        NOUVELLE FACTURE
                       </Button>
                     </div>
                   </div>
