@@ -139,9 +139,25 @@ export default function InvoicesPage() {
   }, []);
 
   const handlePreviewPDF = () => {
-    const previewInvoice = createPreviewInvoice();
-    setShowPDFViewer(true);
+    const subtotal = newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    const fees = subtotal * (feePercentage / 100);
+    const total = subtotal + fees + transport;
+
+    const previewInvoice = {
+      ...newInvoice,
+      id: `PREVIEW-${Date.now()}`,
+      creationDate: new Date().toISOString().split('T')[0],
+      subtotal: subtotal,
+      fees: fees,
+      feePercentage: feePercentage, // Ajoutez cette ligne
+      transport: transport,
+      total: total
+    };
+
+    console.log('Preview Invoice:', previewInvoice);
+
     localStorage.setItem('previewInvoice', JSON.stringify(previewInvoice));
+    setShowPDFViewer(true);
   }
 
   const createPreviewInvoice = (): Invoice => {

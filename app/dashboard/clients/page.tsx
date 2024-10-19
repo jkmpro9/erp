@@ -79,14 +79,17 @@ export default function ClientsPage() {
     setClients(updatedClients);
     await localforage.setItem('clients', updatedClients);
     setNewClient({ name: '', phone: '+243', address: '', city: '' });
-    toast({ message: `Client ajouté: ${clientToAdd.name} a été ajouté avec succès.`, type: 'success' });
+    toast({ message: `Client ajouté: ${clientToAdd.name} a été ajouté avec succès.`, type: 'foreground' });
     setActiveTab('list');
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (editingClient) {
-      setEditingClient(prev => ({ ...prev, [name]: value }));
+      setEditingClient(prev => {
+        if (prev === null) return null;
+        return { ...prev, [name]: value } as Client;
+      });
     } else {
       setNewClient(prev => ({ ...prev, [name]: value }));
     }
@@ -106,10 +109,7 @@ export default function ClientsPage() {
     );
     setClients(updatedClients);
     await localforage.setItem('clients', updatedClients);
-    toast({
-      title: "Client mis à jour",
-      description: `${editingClient.name} a été mis à jour avec succès.`,
-    });
+    toast(`Client mis à jour: ${editingClient.name} a été mis à jour avec succès.`);
     setEditingClient(null);
     setActiveTab('list');
   };

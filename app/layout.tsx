@@ -4,7 +4,11 @@ import { Inter } from 'next/font/google';
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from "@/components/ui/toaster"
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'CoBill CRM - Coccinelle SARL',
@@ -17,11 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
-        {children}
-        <Toaster />
-      </body>
+    <html lang="en" className={`${inter.variable} font-sans`}>
+      <body>{children}</body>
     </html>
   );
 }

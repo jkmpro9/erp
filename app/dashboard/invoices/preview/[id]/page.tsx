@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { PDFViewer, Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import InvoiceCalculator from '@/components/SomeComponent';
 
 // Register fonts (you'll need to add these font files to your project)
 Font.register({
@@ -261,7 +262,7 @@ function getInvoice(id: string) {
   };
 }
 
-export default function InvoicePreviewPage() {
+const InvoicePreviewPage: React.FC = () => {
   const params = useParams();
   const [invoice, setInvoice] = useState<any>(null);
   const [imagesLoaded, setImagesLoaded] = useState(false);
@@ -271,7 +272,7 @@ export default function InvoicePreviewPage() {
       const storedInvoice = localStorage.getItem('previewInvoice');
       if (storedInvoice) {
         const parsedInvoice = JSON.parse(storedInvoice);
-        console.log('Parsed invoice:', parsedInvoice);
+        console.log('Parsed invoice:', parsedInvoice); // Ajoutez ce log pour déboguer
         
         // Convertir toutes les URLs d'images en base64
         const itemsWithBase64Images = await Promise.all(
@@ -301,113 +302,116 @@ export default function InvoicePreviewPage() {
     return <div>Chargement...</div>;
   }
 
-  const InvoicePDF = () => (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.companyName}>COCCINELLE SARL</Text>
-          <Text style={styles.companyInfo}>14, Kokolo, Q/Matonge Pigeon, C/Ngaliema - Kinshasa</Text>
-          <Text style={styles.companyInfo}>45, Avenue Nyangwe - Elie Mbayo, Q/Lido, C/Lubumbashi</Text>
-          <Text style={styles.companyInfo}>+243970764213 / +243859583397 / +8617858307921</Text>
-          <Text style={styles.companyInfo}>sales@coccinelledrc.com | www.coccinelledrc.com</Text>
-        </View>
+  const InvoicePDF = () => {
+    // Utilisez les valeurs pré-calculées de l'objet invoice
+    const subtotal = invoice.subtotal || 0;
+    const feeAmount = invoice.fees || 0;
+    const transportAndCustoms = invoice.transport || 0;
+    const total = invoice.total || 0;
+    const feePercentage = invoice.feePercentage || 10; // Ajoutez cette ligne
 
-        <Text style={styles.title}>FACTURE PROFORMA</Text>
+    console.log('PDF Calculation:', { subtotal, feeAmount, transportAndCustoms, total, feePercentage });
 
-        <View style={styles.invoiceInfo}>
-          <View style={styles.clientInfo}>
-            <Text style={styles.label}>CLIENT(E): {invoice.clientName}</Text>
-            <Text style={styles.label}>LIEU:</Text>
-            <Text style={styles.label}>PHONE: {invoice.clientPhone}</Text>
-          </View>
-          <View style={styles.invoiceDetails}>
-            <Text style={styles.value}>Facture No : {invoice.id}</Text>
-            <Text style={styles.value}>Date Facture : {invoice.creationDate}</Text>
-            <Text style={styles.value}>LIVRAISON: {invoice.deliveryLocation}</Text>
-            <Text style={styles.value}>METHODE: {invoice.deliveryMethod}</Text>
-          </View>
-        </View>
-
-        <View style={styles.table}>
-          <View style={[styles.tableRow, styles.tableRowHeader]}>
-            <View style={styles.tableColSmall}><Text style={styles.tableCellHeader}>NUM</Text></View>
-            <View style={styles.tableColImage}><Text style={styles.tableCellHeader}>IMAGE</Text></View>
-            <View style={styles.tableColSmall}><Text style={styles.tableCellHeader}>QTY</Text></View>
-            <View style={styles.tableColLarge}><Text style={styles.tableCellHeader}>DESCRIPTION</Text></View>
-            <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>PRIX UNIT</Text></View>
-            <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>POIDS/CBM</Text></View>
-            <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>MONTANT</Text></View>
-          </View>
-          {invoice.items.map((item: any, index: number) => (
-            <View style={styles.tableRow} key={index}>
-              <View style={styles.tableColSmall}><Text style={styles.tableCell}>{index + 1}</Text></View>
-              <View style={styles.tableColImage}>
-                <Image src={item.imageUrl || DEFAULT_IMAGE} style={styles.itemImage} />
-              </View>
-              <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.quantity}</Text></View>
-              <View style={styles.tableColLarge}>
-                <Text style={styles.tableCellDescription}>{item.description}</Text>
-              </View>
-              <View style={styles.tableColMedium}>
-                <Text style={styles.tableCell}>
-                  ${typeof item.unitPrice === 'number' ? item.unitPrice.toFixed(2) : item.unitPrice}
-                </Text>
-              </View>
-              <View style={styles.tableColMedium}>
-                <Text style={styles.tableCell}>{item.weightCbm}</Text>
-              </View>
-              <View style={styles.tableColMedium}>
-                <Text style={styles.tableCell}>
-                  ${typeof item.total === 'number' ? item.total.toFixed(2) : item.total}
-                </Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <View style={styles.conditionsSection}>
-            <Text style={styles.conditionsTitle}>Conditions Générales</Text>
-            <Text style={styles.conditionsText}>Délais de livraison : 10-20 jours selon le types de marchandises</Text>
+    return (
+      <Document>
+        <Page size="A4" style={styles.page}>
+          <View style={styles.header}>
+            <Text style={styles.companyName}>COCCINELLE SARL</Text>
+            <Text style={styles.companyInfo}>14, Kokolo, Q/Matonge Pigeon, C/Ngaliema - Kinshasa</Text>
+            <Text style={styles.companyInfo}>45, Avenue Nyangwe - Elie Mbayo, Q/Lido, C/Lubumbashi</Text>
+            <Text style={styles.companyInfo}>+243970764213 / +243859583397 / +8617858307921</Text>
+            <Text style={styles.companyInfo}>sales@coccinelledrc.com | www.coccinelledrc.com</Text>
           </View>
 
-          <View style={styles.calculationSection}>
-            <View style={styles.calculationRow}>
-              <Text style={styles.calculationLabel}>SOUS-TOTAL</Text>
-              <Text style={styles.calculationValue}>
-                ${invoice.subtotal ? invoice.subtotal.toFixed(2) : '0.00'}
-              </Text>
+          <Text style={styles.title}>FACTURE PROFORMA</Text>
+
+          <View style={styles.invoiceInfo}>
+            <View style={styles.clientInfo}>
+              <Text style={styles.label}>CLIENT(E): {invoice.clientName}</Text>
+              <Text style={styles.label}>LIEU:</Text>
+              <Text style={styles.label}>PHONE: {invoice.clientPhone}</Text>
             </View>
-            <View style={styles.calculationRow}>
-              <Text style={styles.calculationLabel}>FRAIS (10%)</Text>
-              <Text style={styles.calculationValue}>
-                ${invoice.fees ? invoice.fees.toFixed(2) : '0.00'}
-              </Text>
-            </View>
-            <View style={styles.calculationRow}>
-              <Text style={styles.calculationLabel}>TRANSPORT & DOUANE</Text>
-              <Text style={styles.calculationValue}>
-                ${invoice.transport ? invoice.transport.toFixed(2) : '0.00'}
-              </Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalRowLabel}>TOTAL GENERALE</Text>
-              <Text style={styles.totalRowValue}>
-                ${invoice.total ? invoice.total.toFixed(2) : '0.00'}
-              </Text>
+            <View style={styles.invoiceDetails}>
+              <Text style={styles.value}>Facture No : {invoice.id}</Text>
+              <Text style={styles.value}>Date Facture : {invoice.creationDate}</Text>
+              <Text style={styles.value}>LIVRAISON: {invoice.deliveryLocation}</Text>
+              <Text style={styles.value}>METHODE: {invoice.deliveryMethod}</Text>
             </View>
           </View>
-        </View>
 
-        <View style={styles.footerSection}>
-          <Text style={styles.footerText}>EQUITY BCDC | 00011105023-32000099901-60 | COCCINELLE RAWBANK | 04011-04410018001-91 |</Text>
-          <Text style={styles.footerText}>COCCINELLE SARL</Text>
-          <Text style={styles.footerText}>RCCM: CD/KNG/RCCM/21-B-02464 | ID.NAT: 01-4300-N89711B | IMPOT: A2173499P</Text>
-          <Text style={styles.footerText}>Email: sales@coccinelledrc.com | Site Web: www.coccinelledrc.com</Text>
-        </View>
-      </Page>
-    </Document>
-  );
+          <View style={styles.table}>
+            <View style={[styles.tableRow, styles.tableRowHeader]}>
+              <View style={styles.tableColSmall}><Text style={styles.tableCellHeader}>NUM</Text></View>
+              <View style={styles.tableColImage}><Text style={styles.tableCellHeader}>IMAGE</Text></View>
+              <View style={styles.tableColSmall}><Text style={styles.tableCellHeader}>QTY</Text></View>
+              <View style={styles.tableColLarge}><Text style={styles.tableCellHeader}>DESCRIPTION</Text></View>
+              <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>PRIX UNIT</Text></View>
+              <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>POIDS/CBM</Text></View>
+              <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>MONTANT</Text></View>
+            </View>
+            {invoice.items.map((item: any, index: number) => (
+              <View style={styles.tableRow} key={index}>
+                <View style={styles.tableColSmall}><Text style={styles.tableCell}>{index + 1}</Text></View>
+                <View style={styles.tableColImage}>
+                  <Image src={item.imageUrl || DEFAULT_IMAGE} style={styles.itemImage} />
+                </View>
+                <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.quantity}</Text></View>
+                <View style={styles.tableColLarge}>
+                  <Text style={styles.tableCellDescription}>{item.description}</Text>
+                </View>
+                <View style={styles.tableColMedium}>
+                  <Text style={styles.tableCell}>
+                    ${typeof item.unitPrice === 'number' ? item.unitPrice.toFixed(2) : item.unitPrice}
+                  </Text>
+                </View>
+                <View style={styles.tableColMedium}>
+                  <Text style={styles.tableCell}>{item.weightCbm}</Text>
+                </View>
+                <View style={styles.tableColMedium}>
+                  <Text style={styles.tableCell}>
+                    ${typeof item.total === 'number' ? item.total.toFixed(2) : item.total}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View style={styles.conditionsSection}>
+              <Text style={styles.conditionsTitle}>Conditions Générales</Text>
+              <Text style={styles.conditionsText}>Délais de livraison : 10-20 jours selon le types de marchandises</Text>
+            </View>
+
+            <View style={styles.calculationSection}>
+              <View style={styles.calculationRow}>
+                <Text style={styles.calculationLabel}>SOUS-TOTAL</Text>
+                <Text style={styles.calculationValue}>${subtotal.toFixed(2)}</Text>
+              </View>
+              <View style={styles.calculationRow}>
+                <Text style={styles.calculationLabel}>FRAIS ({feePercentage}%)</Text>
+                <Text style={styles.calculationValue}>${feeAmount.toFixed(2)}</Text>
+              </View>
+              <View style={styles.calculationRow}>
+                <Text style={styles.calculationLabel}>TRANSPORT & DOUANE</Text>
+                <Text style={styles.calculationValue}>${transportAndCustoms.toFixed(2)}</Text>
+              </View>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalRowLabel}>TOTAL GENERALE</Text>
+                <Text style={styles.totalRowValue}>${total.toFixed(2)}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.footerSection}>
+            <Text style={styles.footerText}>EQUITY BCDC | 00011105023-32000099901-60 | COCCINELLE RAWBANK | 04011-04410018001-91 |</Text>
+            <Text style={styles.footerText}>COCCINELLE SARL</Text>
+            <Text style={styles.footerText}>RCCM: CD/KNG/RCCM/21-B-02464 | ID.NAT: 01-4300-N89711B | IMPOT: A2173499P</Text>
+            <Text style={styles.footerText}>Email: sales@coccinelledrc.com | Site Web: www.coccinelledrc.com</Text>
+          </View>
+        </Page>
+      </Document>
+    );
+  };
 
   return (
     <div className="w-full h-screen">
@@ -417,3 +421,5 @@ export default function InvoicePreviewPage() {
     </div>
   );
 }
+
+export default InvoicePreviewPage;
