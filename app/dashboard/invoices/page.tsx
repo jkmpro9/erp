@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Link, Pencil, Trash, FileText, Search } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -143,15 +143,19 @@ export default function InvoicesPage() {
     const fees = subtotal * (feePercentage / 100);
     const total = subtotal + fees + transport;
 
+    const currentDate = new Date();
+    const invoiceNumber = `COCCI${(currentDate.getMonth() + 1).toString().padStart(2, '0')}${currentDate.getFullYear().toString().slice(-2)}-${Math.floor(1000 + Math.random() * 9000)}`;
+
     const previewInvoice = {
       ...newInvoice,
-      id: `PREVIEW-${Date.now()}`,
-      creationDate: new Date().toISOString().split('T')[0],
+      id: invoiceNumber,
+      creationDate: currentDate.toISOString().split('T')[0],
       subtotal: subtotal,
       fees: fees,
-      feePercentage: feePercentage, // Ajoutez cette ligne
+      feePercentage: feePercentage,
       transport: transport,
-      total: total
+      total: total,
+      createdBy: "NOM DU VENDEUR ACTUEL" // Remplacez ceci par le nom réel du vendeur connecté ou une valeur par défaut
     };
 
     console.log('Preview Invoice:', previewInvoice);
@@ -852,6 +856,9 @@ export default function InvoicesPage() {
             <DialogHeader>
               <DialogTitle>Aperçu de la facture</DialogTitle>
             </DialogHeader>
+            <DialogDescription>
+              Voici un aperçu de la facture que vous avez créée. Vous pouvez la vérifier avant de la finaliser.
+            </DialogDescription>
             <DynamicInvoicePDFViewer />
           </DialogContent>
         </Dialog>

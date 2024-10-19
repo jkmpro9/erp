@@ -23,18 +23,92 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
   },
   header: {
+    flexDirection: 'row',
     marginBottom: 20,
   },
+  headerLeft: {
+    width: '70%',
+    backgroundColor: '#E6F3F0',
+    padding: 15,
+  },
+  headerRight: {
+    width: '30%',
+    backgroundColor: '#2E7D63',
+    padding: 15,
+    color: 'white',
+  },
   companyName: {
-    fontSize: 21,
+    fontSize: 28,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 15,
+    color: '#2E7D63',
+    marginBottom: 10,
   },
   companyInfo: {
-    fontSize: 13,
-    textAlign: 'center',
+    fontSize: 9,
+    color: '#333',
     marginBottom: 2,
+  },
+  invoiceTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 15,
+  },
+  invoiceInfo: {
+    fontSize: 10,
+    color: 'white',
+    marginBottom: 5,
+  },
+  invoiceInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  invoiceInfoLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  invoiceInfoValue: {
+    fontSize: 10,
+    color: 'white',
+  },
+  mainContent: {
+    marginTop: 20,
+  },
+  clientInfoSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    marginTop: 20,
+  },
+  clientInfoColumn: {
+    width: '48%',
+  },
+  clientInfoRow: {
+    flexDirection: 'row',
+    marginBottom: 5,
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    width: '30%',
+  },
+  value: {
+    fontSize: 10,
+    width: '70%',
+  },
+  rightLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    width: '40%',
+    textTransform: 'uppercase',
+  },
+  rightValue: {
+    fontSize: 10,
+    width: '60%',
+    textTransform: 'uppercase',
   },
   title: {
     fontSize: 15,
@@ -43,68 +117,63 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
   },
-  invoiceInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    fontSize: 10,
-  },
-  clientInfo: {
-    width: '50%',
-  },
-  invoiceDetails: {
-    width: '50%',
-    alignItems: 'flex-end',
-  },
-  label: {
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  value: {
-    marginBottom: 5,
-  },
   table: {
     display: 'flex',
     width: 'auto',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#2E7D63', // Couleur verte du thème
     marginTop: 10,
     marginBottom: 10,
-    borderStyle: 'solid',
-    borderWidth: 0.5,
-    borderColor: '#bfbfbf',
   },
   tableRow: {
     flexDirection: 'row',
-    borderBottomColor: '#bfbfbf',
-    borderBottomWidth: 0.5,
+    borderBottomColor: '#2E7D63', // Couleur verte du thème
+    borderBottomWidth: 1,
     alignItems: 'center',
-    minHeight: 50, // Increased height for all rows
+    minHeight: 80,
     textAlign: 'center',
   },
+  tableRowEven: {
+    backgroundColor: '#F0F8F6', // Couleur de fond légère pour les lignes paires
+  },
+  tableRowOdd: {
+    backgroundColor: '#FFFFFF', // Couleur de fond pour les lignes impaires
+  },
   tableRowHeader: {
-    backgroundColor: '#008080',
-    color: '#FFFFFF',
-    minHeight: 30, // Reduced height for header
+    backgroundColor: '#2E7D63', // Couleur verte du thème pour l'en-tête
+    minHeight: 40,
   },
   tableColSmall: {
-    width: '8%', // Reduced width for NUM and QTY
-    borderRightColor: '#bfbfbf',
-    borderRightWidth: 0.5,
+    width: '7%',
+    borderRightColor: '#2E7D63', // Couleur verte du thème
+    borderRightWidth: 1,
     paddingVertical: 5,
     paddingHorizontal: 2,
   },
   tableColMedium: {
-    width: '12%', // Medium width for IMAGE, PRIX UNIT, POIDS/CBM, MONTANT
-    borderRightColor: '#bfbfbf',
-    borderRightWidth: 0.5,
+    width: '12%',
+    borderRightColor: '#2E7D63', // Couleur verte du thème
+    borderRightWidth: 1,
     paddingVertical: 5,
     paddingHorizontal: 2,
   },
   tableColLarge: {
-    width: '36%', // Increased width for DESCRIPTION
-    borderRightColor: '#bfbfbf',
-    borderRightWidth: 0.5,
+    width: '35%',
+    borderRightColor: '#2E7D63', // Couleur verte du thème
+    borderRightWidth: 1,
     paddingVertical: 5,
     paddingHorizontal: 2,
+  },
+  tableColImage: {
+    width: '15%',
+    borderRightColor: '#2E7D63', // Couleur verte du thème
+    borderRightWidth: 1,
+    paddingVertical: 5,
+    paddingHorizontal: 2,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tableCell: {
     fontSize: 9,
@@ -121,19 +190,9 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     paddingLeft: 5,
   },
-  tableColImage: {
-    width: '14.28%', // Same as other columns
-    borderRightColor: '#bfbfbf',
-    borderRightWidth: 0.5,
-    paddingVertical: 5,
-    paddingHorizontal: 2,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   itemImage: {
-    width: 40,  // Increased from 30
-    height: 40, // Increased from 30
+    width: 80,
+    height: 80,
     objectFit: 'contain',
   },
   totals: {
@@ -210,7 +269,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   footerSection: {
-    marginTop: 20,
+    position: 'absolute',
+    bottom: 30,
+    left: 30,
+    right: 30,
     borderTop: '1 solid #008080',
     paddingTop: 10,
   },
@@ -302,6 +364,22 @@ const InvoicePreviewPage: React.FC = () => {
     return <div>Chargement...</div>;
   }
 
+  const formatInvoiceNumber = (date: Date) => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    const random = Math.floor(1000 + Math.random() * 9000); // Génère un nombre aléatoire entre 1000 et 9999
+    return `COCCI${month}${year}-${random}`;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    return `${day}-${month}-${year}`;
+  };
+
   const InvoicePDF = () => {
     // Utilisez les valeurs pré-calculées de l'objet invoice
     const subtotal = invoice.subtotal || 0;
@@ -312,97 +390,139 @@ const InvoicePreviewPage: React.FC = () => {
 
     console.log('PDF Calculation:', { subtotal, feeAmount, transportAndCustoms, total, feePercentage });
 
+    const invoiceNumber = formatInvoiceNumber(new Date(invoice.creationDate));
+    const formattedDate = formatDate(invoice.creationDate);
+
     return (
       <Document>
         <Page size="A4" style={styles.page}>
-          <View style={styles.header}>
-            <Text style={styles.companyName}>COCCINELLE SARL</Text>
-            <Text style={styles.companyInfo}>14, Kokolo, Q/Matonge Pigeon, C/Ngaliema - Kinshasa</Text>
-            <Text style={styles.companyInfo}>45, Avenue Nyangwe - Elie Mbayo, Q/Lido, C/Lubumbashi</Text>
-            <Text style={styles.companyInfo}>+243970764213 / +243859583397 / +8617858307921</Text>
-            <Text style={styles.companyInfo}>sales@coccinelledrc.com | www.coccinelledrc.com</Text>
+          <View style={styles.header} fixed>
+            <View style={styles.headerLeft}>
+              <Text style={styles.companyName}>COCCINELLE</Text>
+              <Text style={styles.companyInfo}>44, Kokolo, Q/Mbinza Pigeon, C/Ngaliema - Kinshasa</Text>
+              <Text style={styles.companyInfo}>45, Avenue Nyangwe - Elie Mbayo, Q/Lido, C/Lubumbashi</Text>
+              <Text style={styles.companyInfo}>243970764213 / 243851958937</Text>
+              <Text style={styles.companyInfo}>sales@coccinelledrc.com</Text>
+              <Text style={styles.companyInfo}>www.coccinelledrc.com</Text>
+              <Text style={styles.companyInfo}>8617858307921</Text>
+            </View>
+            <View style={styles.headerRight}>
+              <Text style={styles.invoiceTitle}>FACTURE</Text>
+              <View style={styles.invoiceInfoRow}>
+                <Text style={styles.invoiceInfoLabel}>Facture No.:</Text>
+                <Text style={styles.invoiceInfoValue}>{invoiceNumber}</Text>
+              </View>
+              <View style={styles.invoiceInfoRow}>
+                <Text style={styles.invoiceInfoLabel}>Date Facture:</Text>
+                <Text style={styles.invoiceInfoValue}>{formattedDate}</Text>
+              </View>
+            </View>
           </View>
 
-          <Text style={styles.title}>FACTURE PROFORMA</Text>
-
-          <View style={styles.invoiceInfo}>
-            <View style={styles.clientInfo}>
-              <Text style={styles.label}>CLIENT(E): {invoice.clientName}</Text>
-              <Text style={styles.label}>LIEU:</Text>
-              <Text style={styles.label}>PHONE: {invoice.clientPhone}</Text>
-            </View>
-            <View style={styles.invoiceDetails}>
-              <Text style={styles.value}>Facture No : {invoice.id}</Text>
-              <Text style={styles.value}>Date Facture : {invoice.creationDate}</Text>
-              <Text style={styles.value}>LIVRAISON: {invoice.deliveryLocation}</Text>
-              <Text style={styles.value}>METHODE: {invoice.deliveryMethod}</Text>
-            </View>
-          </View>
-
-          <View style={styles.table}>
-            <View style={[styles.tableRow, styles.tableRowHeader]}>
-              <View style={styles.tableColSmall}><Text style={styles.tableCellHeader}>NUM</Text></View>
-              <View style={styles.tableColImage}><Text style={styles.tableCellHeader}>IMAGE</Text></View>
-              <View style={styles.tableColSmall}><Text style={styles.tableCellHeader}>QTY</Text></View>
-              <View style={styles.tableColLarge}><Text style={styles.tableCellHeader}>DESCRIPTION</Text></View>
-              <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>PRIX UNIT</Text></View>
-              <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>POIDS/CBM</Text></View>
-              <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>MONTANT</Text></View>
-            </View>
-            {invoice.items.map((item: any, index: number) => (
-              <View style={styles.tableRow} key={index}>
-                <View style={styles.tableColSmall}><Text style={styles.tableCell}>{index + 1}</Text></View>
-                <View style={styles.tableColImage}>
-                  <Image src={item.imageUrl || DEFAULT_IMAGE} style={styles.itemImage} />
+          <View style={styles.mainContent}>
+            {/* Remontée de la section des informations du client */}
+            <View style={[styles.clientInfoSection, { marginTop: 10 }]}>
+              <View style={styles.clientInfoColumn}>
+                <View style={styles.clientInfoRow}>
+                  <Text style={styles.label}>CLIENT(E):</Text>
+                  <Text style={styles.value}>{invoice.clientName}</Text>
                 </View>
-                <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.quantity}</Text></View>
-                <View style={styles.tableColLarge}>
-                  <Text style={styles.tableCellDescription}>{item.description}</Text>
+                <View style={styles.clientInfoRow}>
+                  <Text style={styles.label}>LIEU:</Text>
+                  <Text style={styles.value}>{invoice.clientAddress}</Text>
                 </View>
-                <View style={styles.tableColMedium}>
-                  <Text style={styles.tableCell}>
-                    ${typeof item.unitPrice === 'number' ? item.unitPrice.toFixed(2) : item.unitPrice}
+                <View style={styles.clientInfoRow}>
+                  <Text style={styles.label}>PHONE:</Text>
+                  <Text style={styles.value}>{invoice.clientPhone}</Text>
+                </View>
+              </View>
+              <View style={styles.clientInfoColumn}>
+                <View style={styles.clientInfoRow}>
+                  <Text style={styles.rightLabel}>LIVRAISON:</Text>
+                  <Text style={styles.rightValue}>{invoice.deliveryLocation.toUpperCase()}</Text>
+                </View>
+                <View style={styles.clientInfoRow}>
+                  <Text style={styles.rightLabel}>METHODE:</Text>
+                  <Text style={styles.rightValue}>{invoice.deliveryMethod.toUpperCase()}</Text>
+                </View>
+                <View style={styles.clientInfoRow}>
+                  <Text style={styles.rightLabel}>VENDEUR:</Text>
+                  <Text style={styles.rightValue}>
+                    {invoice.createdBy ? invoice.createdBy.toUpperCase() : 'N/A'}
                   </Text>
                 </View>
-                <View style={styles.tableColMedium}>
-                  <Text style={styles.tableCell}>{item.weightCbm}</Text>
-                </View>
-                <View style={styles.tableColMedium}>
-                  <Text style={styles.tableCell}>
-                    ${typeof item.total === 'number' ? item.total.toFixed(2) : item.total}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
-
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <View style={styles.conditionsSection}>
-              <Text style={styles.conditionsTitle}>Conditions Générales</Text>
-              <Text style={styles.conditionsText}>Délais de livraison : 10-20 jours selon le types de marchandises</Text>
-            </View>
-
-            <View style={styles.calculationSection}>
-              <View style={styles.calculationRow}>
-                <Text style={styles.calculationLabel}>SOUS-TOTAL</Text>
-                <Text style={styles.calculationValue}>${subtotal.toFixed(2)}</Text>
-              </View>
-              <View style={styles.calculationRow}>
-                <Text style={styles.calculationLabel}>FRAIS ({feePercentage}%)</Text>
-                <Text style={styles.calculationValue}>${feeAmount.toFixed(2)}</Text>
-              </View>
-              <View style={styles.calculationRow}>
-                <Text style={styles.calculationLabel}>TRANSPORT & DOUANE</Text>
-                <Text style={styles.calculationValue}>${transportAndCustoms.toFixed(2)}</Text>
-              </View>
-              <View style={styles.totalRow}>
-                <Text style={styles.totalRowLabel}>TOTAL GENERALE</Text>
-                <Text style={styles.totalRowValue}>${total.toFixed(2)}</Text>
               </View>
             </View>
+
+            <View style={styles.table}>
+              <View style={[styles.tableRow, styles.tableRowHeader]}>
+                <View style={styles.tableColSmall}><Text style={styles.tableCellHeader}>NUM</Text></View>
+                <View style={styles.tableColImage}><Text style={styles.tableCellHeader}>IMAGE</Text></View>
+                <View style={styles.tableColSmall}><Text style={styles.tableCellHeader}>QTY</Text></View>
+                <View style={styles.tableColLarge}><Text style={styles.tableCellHeader}>DESCRIPTION</Text></View>
+                <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>PRIX UNIT</Text></View>
+                <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>POIDS/CBM</Text></View>
+                <View style={styles.tableColMedium}><Text style={styles.tableCellHeader}>MONTANT</Text></View>
+              </View>
+              {invoice.items.map((item: any, index: number) => (
+                <View style={[
+                  styles.tableRow,
+                  index % 2 === 0 ? styles.tableRowEven : styles.tableRowOdd
+                ]} key={index}>
+                  <View style={styles.tableColSmall}><Text style={styles.tableCell}>{index + 1}</Text></View>
+                  <View style={styles.tableColImage}>
+                    <Image src={item.imageUrl || DEFAULT_IMAGE} style={styles.itemImage} />
+                  </View>
+                  <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.quantity}</Text></View>
+                  <View style={styles.tableColLarge}>
+                    <Text style={styles.tableCellDescription}>{item.description}</Text>
+                  </View>
+                  <View style={styles.tableColMedium}>
+                    <Text style={styles.tableCell}>
+                      ${typeof item.unitPrice === 'number' ? item.unitPrice.toFixed(2) : item.unitPrice}
+                    </Text>
+                  </View>
+                  <View style={styles.tableColMedium}>
+                    <Text style={styles.tableCell}>{item.weightCbm}</Text>
+                  </View>
+                  <View style={styles.tableColMedium}>
+                    <Text style={styles.tableCell}>
+                      ${(Number(item.quantity) * Number(item.unitPrice)).toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <View style={styles.conditionsSection}>
+                <Text style={styles.conditionsTitle}>Conditions Générales</Text>
+                <Text style={styles.conditionsText}>Délais de livraison : 10-20 jours selon le types de marchandises</Text>
+              </View>
+
+              <View style={styles.calculationSection}>
+                <View style={styles.calculationRow}>
+                  <Text style={styles.calculationLabel}>SOUS-TOTAL</Text>
+                  <Text style={styles.calculationValue}>${subtotal.toFixed(2)}</Text>
+                </View>
+                <View style={styles.calculationRow}>
+                  <Text style={styles.calculationLabel}>FRAIS ({feePercentage}%)</Text>
+                  <Text style={styles.calculationValue}>${feeAmount.toFixed(2)}</Text>
+                </View>
+                <View style={styles.calculationRow}>
+                  <Text style={styles.calculationLabel}>TRANSPORT & DOUANE</Text>
+                  <Text style={styles.calculationValue}>${transportAndCustoms.toFixed(2)}</Text>
+                </View>
+                <View style={styles.totalRow}>
+                  <Text style={styles.totalRowLabel}>TOTAL GENERALE</Text>
+                  <Text style={styles.totalRowValue}>${total.toFixed(2)}</Text>
+                </View>
+              </View>
+            </View>
           </View>
 
-          <View style={styles.footerSection}>
+          {/* Déplacez le footer à la fin de la Page */}
+          <View style={styles.footerSection} fixed>
             <Text style={styles.footerText}>EQUITY BCDC | 00011105023-32000099901-60 | COCCINELLE RAWBANK | 04011-04410018001-91 |</Text>
             <Text style={styles.footerText}>COCCINELLE SARL</Text>
             <Text style={styles.footerText}>RCCM: CD/KNG/RCCM/21-B-02464 | ID.NAT: 01-4300-N89711B | IMPOT: A2173499P</Text>
