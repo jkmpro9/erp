@@ -7,12 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Pencil, Trash, Menu } from 'lucide-react';
+import { Pencil, Trash, X } from 'lucide-react';
 import localforage from '@/lib/localForage';
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { ToastAction } from "@/components/ui/toast"
 import { Inter } from 'next/font/google'
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -29,13 +29,13 @@ export default function ClientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCity, setFilterCity] = useState('all');
   const [activeTab, setActiveTab] = useState('list');
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [newClient, setNewClient] = useState<Omit<Client, 'id'>>({
     name: '',
     phone: '+243',
     address: '',
     city: '',
   });
-  const [clientToAdd, setClientToAdd] = useState<Client | null>(null);
   const { toast } = useToast()
 
   useEffect(() => {
@@ -85,13 +85,69 @@ export default function ClientsPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setNewClient(prev => ({ ...prev, [name]: value }));
+    if (editingClient) {
+      setEditingClient(prev => ({ ...prev, [name]: value }));
+    } else {
+      setNewClient(prev => ({ ...prev, [name]: value }));
+    }
   };
 
-  const handleAddClientForm = (client: Client) => {
-    setClientToAdd(client);
-    toast({ message: `Client ajouté: ${client.name} a été ajouté avec succès.`, type: 'foreground' });
+  const handleEditClient = (client: Client) => {
+    setEditingClient(client);
+    setActiveTab('edit');
   };
+
+  const handleUpdateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingClient) return;
+
+    const updatedClients = clients.map(client => 
+      client.id === editingClient.id ? editingClient : client
+    );
+    setClients(updatedClients);
+    await localforage.setItem('clients', updatedClients);
+    toast({
+      title: "Client mis à jour",
+      description: `${editingClient.name} a été mis à jour avec succès.`,
+    });
+    setEditingClient(null);
+    setActiveTab('list');
+  };
+
+  const cancelEdit = () => {
+    setEditingClient(null);
+    setActiveTab('list');
+  };
+
+  const calculateStatistics = () => {
+    const totalClients = clients.length;
+    const clientsByCity = clients.reduce((acc, client) => {
+      acc[client.city] = (acc[client.city] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const cityData = Object.entries(clientsByCity).map(([city, count]) => ({
+      city,
+      count,
+    }));
+
+    const phoneCodeData = clients.reduce((acc, client) => {
+      const phoneCode = client.phone.slice(0, 5); // Prend les 5 premiers chiffres comme code
+      acc[phoneCode] = (acc[phoneCode] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const phoneCodeChartData = Object.entries(phoneCodeData)
+      .map(([code, count]) => ({ code, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5); // Prend les 5 codes les plus fréquents
+
+    return { totalClients, cityData, phoneCodeChartData };
+  };
+
+  const statistics = calculateStatistics();
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
   return (
     <div className={`container mx-auto p-4 ${inter.className}`}>
@@ -182,7 +238,7 @@ export default function ClientsPage() {
                         <TableCell className="text-base">{client.address}</TableCell>
                         <TableCell className="text-base">{client.city}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => handleEditClient(client)}>
                             <Pencil className="h-5 w-5" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleDeleteClient(client.id)}>
@@ -254,13 +310,112 @@ export default function ClientsPage() {
             </Card>
           )}
 
+          {activeTab === 'edit' && editingClient && (
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle className="text-2xl">Modifier un Client</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdateClient} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-base">Nom</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={editingClient.name}
+                      onChange={handleInputChange}
+                      required
+                      className="text-base"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-base">Numéro de téléphone</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      value={editingClient.phone}
+                      onChange={handleInputChange}
+                      required
+                      className="text-base"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="city" className="text-base">Ville</Label>
+                    <Input
+                      id="city"
+                      name="city"
+                      value={editingClient.city}
+                      onChange={handleInputChange}
+                      required
+                      className="text-base"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address" className="text-base">Adresse</Label>
+                    <Input
+                      id="address"
+                      name="address"
+                      value={editingClient.address}
+                      onChange={handleInputChange}
+                      required
+                      className="text-base"
+                    />
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button type="submit" className="text-base">Mettre à jour le Client</Button>
+                    <Button type="button" variant="outline" className="text-base" onClick={cancelEdit}>
+                      Annuler
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
           {activeTab === 'stats' && (
             <Card className="shadow-md">
               <CardHeader>
                 <CardTitle className="text-2xl">Statistiques des Clients</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-base">Les statistiques des clients seront affichées ici.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Nombre total de clients : {statistics.totalClients}</h3>
+                    <h3 className="text-lg font-semibold mb-2">Répartition par ville</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={statistics.cityData}>
+                        <XAxis dataKey="city" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="count" fill="#8884d8" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Top 5 des codes téléphoniques</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={statistics.phoneCodeChartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="count"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {statistics.phoneCodeChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           )}
