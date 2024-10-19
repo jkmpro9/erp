@@ -368,6 +368,31 @@ export default function InvoicesPage() {
     });
   };
 
+  const handleResetInvoice = () => {
+    setNewInvoice({
+      clientName: '',
+      clientPhone: '',
+      clientAddress: '',
+      deliveryLocation: '',
+      deliveryMethod: '',
+      items: [],
+      subtotal: 0,
+      fees: 0,
+      transport: 0,
+      total: 0
+    });
+    setSubtotal(0);
+    setFees(0);
+    setTransport(0);
+    setTotal(0);
+    setTotalQuantity(0);
+    setTotalWeight(0);
+    toast({
+      title: "Nouvelle facture",
+      description: "Le formulaire a été réinitialisé pour une nouvelle facture.",
+    });
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Gestion des Factures</h1>
@@ -533,7 +558,7 @@ export default function InvoicesPage() {
           {activeTab === 'create' && (
             <Card>
               <CardHeader>
-                <CardTitle>Créer une Nouvelle Facture</CardTitle>
+                <CardTitle className="text-2xl">Créer une Nouvelle Facture</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex space-x-6">
@@ -605,8 +630,17 @@ export default function InvoicesPage() {
                     </div>
 
                     {/* Articles */}
-                    <div>
+                    <div className="flex justify-between items-center">
                       <h3 className="text-lg font-semibold mb-2">Articles</h3>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleResetInvoice}
+                        className="mb-2"
+                      >
+                        Nouvelle Facture
+                      </Button>
+                    </div>
+                    <div>
                       <div className="flex justify-between mb-2">
                         <Button variant="destructive" onClick={handleRemoveAllItems}>Effacer tous les Articles</Button>
                         <Dialog open={isAddArticleOpen} onOpenChange={setIsAddArticleOpen}>
@@ -783,6 +817,9 @@ export default function InvoicesPage() {
                       </Button>
                       <Button onClick={handleDownloadPDF} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
                         TÉLÉCHARGER PDF
+                      </Button>
+                      <Button onClick={handleResetInvoice} className="w-full bg-gray-600 hover:bg-gray-700 text-white">
+                        NOUVELLE FACTURE
                       </Button>
                     </div>
                   </div>

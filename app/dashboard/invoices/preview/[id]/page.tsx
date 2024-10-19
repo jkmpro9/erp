@@ -220,18 +220,25 @@ const styles = StyleSheet.create({
   },
 });
 
-// Fonction pour convertir une URL d'image en base64
-const getBase64FromUrl = async (url: string) => {
-  const data = await fetch(url);
-  const blob = await data.blob();
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(blob); 
-    reader.onloadend = () => {
-      const base64data = reader.result;   
-      resolve(base64data);
-    }
-  });
+// Ajoutez cette constante pour une image par défaut
+const DEFAULT_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+// Fonction améliorée pour convertir une URL d'image en base64
+const getBase64FromUrl = async (url: string): Promise<string> => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Error fetching image:', error);
+    return DEFAULT_IMAGE; // Retourne l'image par défaut en cas d'erreur
+  }
 }
 
 function getInvoice(id: string) {
@@ -257,17 +264,41 @@ function getInvoice(id: string) {
 export default function InvoicePreviewPage() {
   const params = useParams();
   const [invoice, setInvoice] = useState<any>(null);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   useEffect(() => {
-    // Récupérer les données de la facture depuis localStorage
-    const storedInvoice = localStorage.getItem('previewInvoice');
-    if (storedInvoice) {
-      setInvoice(JSON.parse(storedInvoice));
-    }
+    const loadInvoiceAndImages = async () => {
+      const storedInvoice = localStorage.getItem('previewInvoice');
+      if (storedInvoice) {
+        const parsedInvoice = JSON.parse(storedInvoice);
+        console.log('Parsed invoice:', parsedInvoice);
+        
+        // Convertir toutes les URLs d'images en base64
+        const itemsWithBase64Images = await Promise.all(
+          parsedInvoice.items.map(async (item: any) => {
+            if (item.imageUrl) {
+              console.log('Processing image URL:', item.imageUrl);
+              const base64Image = await getBase64FromUrl(item.imageUrl);
+              console.log('Base64 image loaded:', !!base64Image);
+              return { ...item, imageUrl: base64Image };
+            }
+            return { ...item, imageUrl: DEFAULT_IMAGE };
+          })
+        );
+
+        setInvoice({
+          ...parsedInvoice,
+          items: itemsWithBase64Images,
+        });
+        setImagesLoaded(true);
+      }
+    };
+
+    loadInvoiceAndImages();
   }, [params.id]);
 
-  if (!invoice) {
-    return <div>Loading...</div>;
+  if (!invoice || !imagesLoaded) {
+    return <div>Chargement...</div>;
   }
 
   const InvoicePDF = () => (
@@ -311,7 +342,7 @@ export default function InvoicePreviewPage() {
             <View style={styles.tableRow} key={index}>
               <View style={styles.tableColSmall}><Text style={styles.tableCell}>{index + 1}</Text></View>
               <View style={styles.tableColImage}>
-                <Image src={item.imageUrl} style={styles.itemImage} />
+                <Image src={item.imageUrl || DEFAULT_IMAGE} style={styles.itemImage} />
               </View>
               <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.quantity}</Text></View>
               <View style={styles.tableColLarge}>
