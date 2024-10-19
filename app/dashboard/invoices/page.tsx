@@ -14,11 +14,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Link, Pencil, Trash, FileText, Search } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { toast } from '@/hooks/use-toast';
 
-// Dynamically import the InvoicePDFViewer component
-const DynamicInvoicePDFViewer = dynamic(() => import('@/components/InvoicePDFViewer'), {
+// Importez dynamiquement le composant de prévisualisation PDF
+const DynamicInvoicePDFViewer = dynamic(() => import('../invoices/preview/[id]/page'), {
   ssr: false,
-  loading: () => <p>Loading PDF viewer...</p>
+  loading: () => <p>Chargement de l'aperçu PDF...</p>
 });
 
 interface Article {
@@ -140,7 +141,6 @@ export default function InvoicesPage() {
   const handlePreviewPDF = () => {
     const previewInvoice = createPreviewInvoice();
     setShowPDFViewer(true);
-    // You can still store the invoice data if needed
     localStorage.setItem('previewInvoice', JSON.stringify(previewInvoice));
   }
 
@@ -328,28 +328,44 @@ export default function InvoicesPage() {
     await localforage.setItem('drafts', updatedDrafts);
   };
 
+  const calculateTotal = (items: Article[]): number => {
+    return items.reduce((total, item) => total + item.quantity * item.unitPrice, 0);
+  };
+
   const handleConvertDraftToInvoice = async (draft: Draft) => {
+    // Validation
+    if (!draft.clientName || draft.items.length === 0) {
+      toast({
+        title: "Erreur de validation",
+        description: "Le nom du client et au moins un article sont requis.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // La confirmation sera gérée par l'AlertDialog
+
+    // Conversion
     const newInvoice: Invoice = {
       ...draft,
       id: `FAC${(invoices.length + 1).toString().padStart(3, '0')}`,
+      creationDate: new Date().toISOString().split('T')[0],
       amount: calculateTotal(draft.items),
-      createdBy: 'Current User', // Replace with actual logged-in user
-      subtotal: 0,
-      fees: 0,
-      transport: 0,
-      total: 0
+      createdBy: 'Current User', // Remplacer par l'utilisateur actuel
     };
-    const updatedInvoices = [...invoices, newInvoice];
-    setInvoices(updatedInvoices);
-    await localforage.setItem('invoices', updatedInvoices);
 
-    const updatedDrafts = drafts.filter(d => d.id !== draft.id);
-    setDrafts(updatedDrafts);
-    await localforage.setItem('drafts', updatedDrafts);
-  };
+    // Mise à jour de l'état
+    setInvoices([...invoices, newInvoice]);
+    setDrafts(drafts.filter(d => d.id !== draft.id));
 
-  const calculateTotal = (items: Article[]): number => {
-    return items.reduce((total, item) => total + item.quantity * item.unitPrice, 0);
+    // Sauvegarde
+    await localforage.setItem('invoices', [...invoices, newInvoice]);
+    await localforage.setItem('drafts', drafts.filter(d => d.id !== draft.id));
+
+    toast({
+      title: "Brouillon converti",
+      description: `Le brouillon a été converti en facture ${newInvoice.id}`,
+    });
   };
 
   return (
@@ -480,9 +496,31 @@ export default function InvoicesPage() {
                           <Button variant="ghost" size="sm" onClick={() => handleDeleteDraft(draft.id)}>
                             <Trash className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleConvertDraftToInvoice(draft)}>
-                            <FileText className="h-4 w-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Convertir en facture</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Êtes-vous sûr de vouloir convertir ce brouillon en facture ?
+                                  <br />
+                                  Client: {draft.clientName}
+                                  <br />
+                                  Total: ${calculateTotal(draft.items).toFixed(2)}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleConvertDraftToInvoice(draft)}>
+                                  Convertir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -759,9 +797,9 @@ export default function InvoicesPage() {
         <Dialog open={showPDFViewer} onOpenChange={setShowPDFViewer}>
           <DialogContent className="max-w-4xl">
             <DialogHeader>
-              <DialogTitle>Invoice Preview</DialogTitle>
+              <DialogTitle>Aperçu de la facture</DialogTitle>
             </DialogHeader>
-            <DynamicInvoicePDFViewer invoice={createPreviewInvoice()} />
+            <DynamicInvoicePDFViewer />
           </DialogContent>
         </Dialog>
       )}
