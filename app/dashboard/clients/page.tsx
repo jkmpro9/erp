@@ -8,12 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Pencil, Trash, X } from 'lucide-react';
-import localforage from '@/lib/localForage';
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { Inter } from 'next/font/google'
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { supabase } from '@/utils/supabase';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -72,31 +72,19 @@ export default function ClientsPage() {
   useEffect(() => {
     const loadClients = async () => {
       try {
-        // Essayer de charger les clients depuis le stockage local
-        const storedClients = await localforage.getItem<Client[]>('clients');
-        
-        if (storedClients && storedClients.length > 0) {
-          // Si des clients sont stockés localement, les utiliser
-          setClients(storedClients);
-        } else {
-          // Si aucun client n'est stocké localement, simuler un appel API
-          // Dans une vraie application, vous remplaceriez ceci par un vrai appel API
-          const response = await fetch('/api/clients');
-          if (!response.ok) {
-            throw new Error('Erreur lors du chargement des clients');
-          }
-          const clientsData = await response.json();
-          setClients(clientsData);
-          // Stocker les clients récupérés localement
-          await localforage.setItem('clients', clientsData);
-        }
+        const { data, error } = await supabase
+          .from('clients')
+          .select('*');
+
+        if (error) throw error;
+
+        setClients(data || []);
       } catch (error) {
-        console.error('Erreur lors du chargement des clients:', error);
+        console.error('Error loading clients:', error);
         toast({
-          title: "Erreur",
-          description: "Impossible de charger la liste des clients. Veuillez réessayer plus tard.",
-          variant: "destructive",
-        });
+          title: "Your Title",
+          description: "Your description",
+        } as any);
       }
     };
 
@@ -112,25 +100,54 @@ export default function ClientsPage() {
   });
 
   const handleDeleteClient = async (id: string) => {
-    const updatedClients = clients.filter(client => client.id !== id);
-    setClients(updatedClients);
-    await localforage.setItem('clients', updatedClients);
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setClients(clients.filter(client => client.id !== id));
+      toast({
+        title: "Your Title",
+        description: "Your description",
+      } as any);
+    } catch (error) {
+      console.error('Error deleting client:', error);
+      toast({
+        title: "Your Title",
+        description: "Your description",
+      } as any);
+    }
   };
 
   const handleAddClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newId = `CL${(clients.length + 1).toString().padStart(3, '0')}`;
-    const clientToAdd = { ...newClient, id: newId };
-    const updatedClients = [...clients, clientToAdd];
-    setClients(updatedClients);
-    await localforage.setItem('clients', updatedClients);
-    setNewClient({ name: '', phone: '+243', address: '', city: '' });
-    toast({
-      title: "Succès",
-      description: `Client ajouté: ${clientToAdd.name} a été ajouté avec succès.`,
-      variant: "default",
-    });
-    setActiveTab('list');
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .insert([newClient])
+        .select();
+
+      if (error) throw error;
+
+      if (data) {
+        setClients([...clients, data[0]]);
+        setNewClient({ name: '', phone: '+243', address: '', city: '' });
+        toast({
+          title: "Your Title",
+          description: `Client ajouté: ${data[0].name} a été ajouté avec succès.`,
+        } as any);
+        setActiveTab('list');
+      }
+    } catch (error) {
+      console.error('Error adding client:', error);
+      toast({
+        title: "Your Title",
+        description: "Your description",
+      } as any);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,18 +171,30 @@ export default function ClientsPage() {
     e.preventDefault();
     if (!editingClient) return;
 
-    const updatedClients = clients.map(client => 
-      client.id === editingClient.id ? editingClient : client
-    );
-    setClients(updatedClients);
-    await localforage.setItem('clients', updatedClients);
-    toast({
-      title: "Succès",
-      description: `Client mis à jour: ${editingClient.name} a été mis à jour avec succès.`,
-      variant: "default",
-    });
-    setEditingClient(null);
-    setActiveTab('list');
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update(editingClient)
+        .eq('id', editingClient.id);
+
+      if (error) throw error;
+
+      setClients(clients.map(client => 
+        client.id === editingClient.id ? editingClient : client
+      ));
+      toast({
+        title: "Your Title",
+        description: `Client mis à jour: ${editingClient.name} a été mis à jour avec succès.`,
+      } as any);
+      setEditingClient(null);
+      setActiveTab('list');
+    } catch (error) {
+      console.error('Error updating client:', error);
+      toast({
+        title: "Your Title",
+        description: "Your description",
+      } as any);
+    }
   };
 
   const cancelEdit = () => {
@@ -205,15 +234,38 @@ export default function ClientsPage() {
 
   const handleViewClientDetails = async (client: Client) => {
     setSelectedClient(client);
-    // Charger les factures, paiements et transactions du client
-    const invoices = await localforage.getItem<Invoice[]>('invoices') || [];
-    const payments = await localforage.getItem<Payment[]>('payments') || [];
-    const transactions = await localforage.getItem<Transaction[]>('transactions') || [];
+    try {
+      // Fetch invoices, payments, and transactions from Supabase
+      const { data: invoices, error: invoicesError } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('clientId', client.id);
 
-    setClientInvoices(invoices.filter(invoice => invoice.clientId === client.id));
-    setClientPayments(payments.filter(payment => payment.clientId === client.id));
-    setClientTransactions(transactions.filter(transaction => transaction.clientId === client.id));
-    setActiveTab('details');
+      const { data: payments, error: paymentsError } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('clientId', client.id);
+
+      const { data: transactions, error: transactionsError } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('clientId', client.id);
+
+      if (invoicesError || paymentsError || transactionsError) {
+        throw new Error('Error fetching client details');
+      }
+
+      setClientInvoices(invoices || []);
+      setClientPayments(payments || []);
+      setClientTransactions(transactions || []);
+      setActiveTab('details');
+    } catch (error) {
+      console.error('Error fetching client details:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les détails du client. Veuillez réessayer.",
+      } as any);
+    }
   };
 
   const handleTabChange = (newTab: string) => {
