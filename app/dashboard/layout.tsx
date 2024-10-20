@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Menu, X } from 'lucide-react'
 import { UserNav } from '@/components/dashboard/user-nav'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
 // Create a context for language
 const LanguageContext = createContext<{
@@ -83,44 +84,46 @@ export default function DashboardLayout({
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage }}>
-      <div className="flex min-h-screen bg-background">
-        <aside className={`border-r border-border transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
-          <SidebarNav translations={translations[language]} collapsed={sidebarCollapsed} />
-        </aside>
-        <div className="flex-1">
-          <header className="border-b border-border">
-            <div className="flex h-16 items-center px-4">
-              <Button variant="ghost" size="icon" onClick={toggleSidebar} className="mr-4">
-                {sidebarCollapsed ? <Menu className="h-6 w-6" /> : <X className="h-6 w-6" />}
-              </Button>
-              <div className="ml-auto flex items-center space-x-4">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="w-16 justify-start px-2">
-                      {language === 'fr' ? <FrenchFlag /> : <EnglishFlag />}
-                      <span className="ml-2">{language.toUpperCase()}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => toggleLanguage('fr')}>
-                      <FrenchFlag />
-                      <span className="ml-2">FR</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => toggleLanguage('en')}>
-                      <EnglishFlag />
-                      <span className="ml-2">EN</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <UserNav />
+      <ProtectedRoute>
+        <div className="flex min-h-screen bg-background">
+          <aside className={`border-r border-border transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
+            <SidebarNav translations={translations[language]} collapsed={sidebarCollapsed} />
+          </aside>
+          <div className="flex-1">
+            <header className="border-b border-border">
+              <div className="flex h-16 items-center px-4">
+                <Button variant="ghost" size="icon" onClick={toggleSidebar} className="mr-4">
+                  {sidebarCollapsed ? <Menu className="h-6 w-6" /> : <X className="h-6 w-6" />}
+                </Button>
+                <div className="ml-auto flex items-center space-x-4">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="w-16 justify-start px-2">
+                        {language === 'fr' ? <FrenchFlag /> : <EnglishFlag />}
+                        <span className="ml-2">{language.toUpperCase()}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => toggleLanguage('fr')}>
+                        <FrenchFlag />
+                        <span className="ml-2">FR</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => toggleLanguage('en')}>
+                        <EnglishFlag />
+                        <span className="ml-2">EN</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <UserNav />
+                </div>
               </div>
-            </div>
-          </header>
-          <main className="flex-1 space-y-4 p-8 pt-6">
-            {children}
-          </main>
+            </header>
+            <main className="flex-1 space-y-4 p-8 pt-6">
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
+      </ProtectedRoute>
     </LanguageContext.Provider>
   )
 }
