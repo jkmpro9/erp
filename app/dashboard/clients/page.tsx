@@ -19,6 +19,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 interface Client {
   id: string;
+  custom_id: string;  // Add this line
   name: string;
   phone: string;
   address: string;
@@ -61,6 +62,7 @@ export default function ClientsPage() {
     phone: '+243',
     address: '',
     city: '',
+    custom_id: '',
   });
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [clientInvoices, setClientInvoices] = useState<Invoice[]>([]);
@@ -134,9 +136,9 @@ export default function ClientsPage() {
 
       if (data) {
         setClients([...clients, data[0]]);
-        setNewClient({ name: '', phone: '+243', address: '', city: '' });
+        setNewClient({ name: '', phone: '+243', address: '', city: '', custom_id: '' });
         toast({
-          title: "Your Title",
+          title: "Titre de votre toast",
           description: `Client ajouté: ${data[0].name} a été ajouté avec succès.`,
         } as any);
         setActiveTab('list');
@@ -215,8 +217,10 @@ export default function ClientsPage() {
     }));
 
     const phoneCodeData = clients.reduce((acc, client) => {
-      const phoneCode = client.phone.slice(0, 5); // Prend les 5 premiers chiffres comme code
-      acc[phoneCode] = (acc[phoneCode] || 0) + 1;
+      if (client.phone) {
+        const phoneCode = client.phone.slice(0, 5); // Prend les 5 premiers chiffres comme code
+        acc[phoneCode] = (acc[phoneCode] || 0) + 1;
+      }
       return acc;
     }, {} as Record<string, number>);
 
@@ -366,7 +370,7 @@ export default function ClientsPage() {
                   <TableBody>
                     {filteredClients.map((client) => (
                       <TableRow key={client.id}>
-                        <TableCell className="text-base">{client.id}</TableCell>
+                        <TableCell className="text-base">{client.custom_id}</TableCell>
                         <TableCell className="text-base">
                           <Link href={`/dashboard/clients/${client.id}`} className="text-blue-600 hover:underline">
                             {client.name}

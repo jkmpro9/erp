@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { supabase } from '@/utils/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import localforage from '@/lib/localForage';
+import { useToast } from "@/components/ui/use-toast"
 
 interface Customer {
   id: string;
+  custom_id: string;
   name: string;
   phone: string;
   address: string;
@@ -43,8 +45,9 @@ interface Package {
   trackingNumber: string;
 }
 
-export default function CustomerPage() {
+export default function ClientDetailsPage() {
   const params = useParams();
+  const { toast } = useToast();
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -52,55 +55,97 @@ export default function CustomerPage() {
   const [packages, setPackages] = useState<Package[]>([]);
 
   useEffect(() => {
-    const fetchCustomerData = async () => {
-      const clients = await localforage.getItem<Customer[]>('clients');
-      const customerData = clients?.find(c => c.id === params.id) || null;
-      setCustomer(customerData);
-
-      // Fetch related data (invoices, payments, transactions, packages)
-      // These are mock implementations. Replace with actual data fetching logic.
-      const storedInvoices = await localforage.getItem<Invoice[]>(`invoices_${params.id}`);
-      setInvoices(storedInvoices || []);
-
-      const storedPayments = await localforage.getItem<Payment[]>(`payments_${params.id}`);
-      setPayments(storedPayments || []);
-
-      const storedTransactions = await localforage.getItem<Transaction[]>(`transactions_${params.id}`);
-      setTransactions(storedTransactions || []);
-
-      const storedPackages = await localforage.getItem<Package[]>(`packages_${params.id}`);
-      setPackages(storedPackages || []);
-    };
-
-    fetchCustomerData();
+    fetchClientDetails();
   }, [params.id]);
 
+  const fetchClientDetails = async () => {
+    try {
+      // Fetch customer details
+      const { data: customerData, error: customerError } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', params.id)
+        .single();
+
+      if (customerError) throw customerError;
+      setCustomer(customerData);
+
+      // Fetch invoices
+      const { data: invoicesData, error: invoicesError } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('clientId', params.id);
+
+      if (invoicesError) throw invoicesError;
+      setInvoices(invoicesData);
+
+      // Fetch payments
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('clientId', params.id);
+
+      if (paymentsError) throw paymentsError;
+      setPayments(paymentsData);
+
+      // Fetch transactions
+      const { data: transactionsData, error: transactionsError } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('clientId', params.id);
+
+      if (transactionsError) throw transactionsError;
+      setTransactions(transactionsData);
+
+      // Fetch packages
+      const { data: packagesData, error: packagesError } = await supabase
+        .from('packages')
+        .select('*')
+        .eq('clientId', params.id);
+
+      if (packagesError) throw packagesError;
+      setPackages(packagesData);
+
+    } catch (error) {
+      console.error('Error fetching client details:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les détails du client. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!customer) {
-    return <div>Loading...</div>;
+    return <div>Chargement...</div>;
   }
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Customer Details: {customer.name}</h1>
-      <Card className="mb-4">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Détails du Client: {customer.name}</CardTitle>
+        </CardHeader>
         <CardContent>
-          <p><strong>Phone:</strong> {customer.phone}</p>
-          <p><strong>Address:</strong> {customer.address}</p>
-          <p><strong>City:</strong> {customer.city}</p>
+          <p><strong>ID:</strong> {customer.custom_id}</p>
+          <p><strong>Téléphone:</strong> {customer.phone}</p>
+          <p><strong>Adresse:</strong> {customer.address}</p>
+          <p><strong>Ville:</strong> {customer.city}</p>
         </CardContent>
       </Card>
 
       <Tabs defaultValue="invoices">
         <TabsList>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="invoices">Factures</TabsTrigger>
+          <TabsTrigger value="payments">Paiements</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="packages">Packages</TabsTrigger>
+          <TabsTrigger value="packages">Colis</TabsTrigger>
         </TabsList>
+
         <TabsContent value="invoices">
           <Card>
             <CardHeader>
-              <CardTitle>Invoices</CardTitle>
+              <CardTitle>Factures</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -108,16 +153,16 @@ export default function CustomerPage() {
                   <TableRow>
                     <TableHead>ID</TableHead>
                     <TableHead>Date</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Montant</TableHead>
+                    <TableHead>Statut</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {invoices.map((invoice) => (
                     <TableRow key={invoice.id}>
                       <TableCell>{invoice.id}</TableCell>
-                      <TableCell>{invoice.date}</TableCell>
-                      <TableCell>${invoice.amount}</TableCell>
+                      <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
+                      <TableCell>{invoice.amount.toFixed(2)} $</TableCell>
                       <TableCell>{invoice.status}</TableCell>
                     </TableRow>
                   ))}
@@ -126,10 +171,11 @@ export default function CustomerPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
         <TabsContent value="payments">
           <Card>
             <CardHeader>
-              <CardTitle>Payments</CardTitle>
+              <CardTitle>Paiements</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -137,16 +183,16 @@ export default function CustomerPage() {
                   <TableRow>
                     <TableHead>ID</TableHead>
                     <TableHead>Date</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Method</TableHead>
+                    <TableHead>Montant</TableHead>
+                    <TableHead>Méthode</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {payments.map((payment) => (
                     <TableRow key={payment.id}>
                       <TableCell>{payment.id}</TableCell>
-                      <TableCell>{payment.date}</TableCell>
-                      <TableCell>${payment.amount}</TableCell>
+                      <TableCell>{new Date(payment.date).toLocaleDateString()}</TableCell>
+                      <TableCell>{payment.amount.toFixed(2)} $</TableCell>
                       <TableCell>{payment.method}</TableCell>
                     </TableRow>
                   ))}
@@ -155,6 +201,7 @@ export default function CustomerPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
         <TabsContent value="transactions">
           <Card>
             <CardHeader>
@@ -167,16 +214,16 @@ export default function CustomerPage() {
                     <TableHead>ID</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Description</TableHead>
-                    <TableHead>Amount</TableHead>
+                    <TableHead>Montant</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {transactions.map((transaction) => (
                     <TableRow key={transaction.id}>
                       <TableCell>{transaction.id}</TableCell>
-                      <TableCell>{transaction.date}</TableCell>
+                      <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
                       <TableCell>{transaction.description}</TableCell>
-                      <TableCell>${transaction.amount}</TableCell>
+                      <TableCell>{transaction.amount.toFixed(2)} $</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -184,10 +231,11 @@ export default function CustomerPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
         <TabsContent value="packages">
           <Card>
             <CardHeader>
-              <CardTitle>Packages</CardTitle>
+              <CardTitle>Colis</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
@@ -195,17 +243,17 @@ export default function CustomerPage() {
                   <TableRow>
                     <TableHead>ID</TableHead>
                     <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Tracking Number</TableHead>
+                    <TableHead>Numéro de suivi</TableHead>
+                    <TableHead>Statut</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {packages.map((pkg) => (
                     <TableRow key={pkg.id}>
                       <TableCell>{pkg.id}</TableCell>
-                      <TableCell>{pkg.date}</TableCell>
-                      <TableCell>{pkg.status}</TableCell>
+                      <TableCell>{new Date(pkg.date).toLocaleDateString()}</TableCell>
                       <TableCell>{pkg.trackingNumber}</TableCell>
+                      <TableCell>{pkg.status}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
