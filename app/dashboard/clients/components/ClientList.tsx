@@ -13,8 +13,8 @@ interface Client {
   id: string;
   custom_id: string;
   name: string;
-  phone: string;
-  address: string;
+  phone: string | null;
+  address: string | null;
   city: string;
 }
 
@@ -29,9 +29,10 @@ export const ClientList = ({ clients, onEditClient, onDeleteClient }: ClientList
   const [filterCity, setFilterCity] = useState('all');
 
   const filteredClients = clients.filter((client) => {
-    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          client.phone.includes(searchTerm) ||
-                          client.address.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = 
+      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (client.phone && client.phone.includes(searchTerm)) ||
+      (client.address && client.address.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesFilter = filterCity === 'all' || client.city === filterCity;
     return matchesSearch && matchesFilter;
   });
