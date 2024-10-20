@@ -74,7 +74,8 @@ export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState<'list' | 'create' | 'drafts'>('list');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [drafts, setDrafts] = useState<Draft[]>([]);
-  const [newInvoice, setNewInvoice] = useState<Omit<Invoice, 'id' | 'creationDate' | 'amount'>>({
+  const [newInvoice, setNewInvoice] = useState<Omit<Invoice, 'creationDate' | 'amount'>>({
+    id: '',
     clientName: '',
     clientPhone: '',
     clientAddress: '',
@@ -85,7 +86,7 @@ export default function InvoicesPage() {
     fees: 0,
     transport: 0,
     total: 0,
-    createdBy: '', // Ajoutez cette ligne
+    createdBy: '',
   });
   const [isAddArticleOpen, setIsAddArticleOpen] = useState(false);
   const [newArticle, setNewArticle] = useState<Article>({
@@ -291,6 +292,7 @@ export default function InvoicesPage() {
     setInvoices(updatedInvoices);
     await localforage.setItem('invoices', updatedInvoices);
     setNewInvoice({
+      id: '', // Ajoutez cette ligne pour corriger l'erreur de type
       clientName: '',
       clientPhone: '',
       clientAddress: '',
@@ -301,7 +303,7 @@ export default function InvoicesPage() {
       fees: 0,
       transport: 0,
       total: 0,
-      createdBy: '', // Ajoutez cette ligne
+      createdBy: '',
     });
   };
 
@@ -341,6 +343,7 @@ export default function InvoicesPage() {
     setDrafts(updatedDrafts);
     await localforage.setItem('drafts', updatedDrafts);
     setNewInvoice({
+      id: '', // Ajoutez cette ligne pour corriger l'erreur de type
       clientName: '',
       clientPhone: '',
       clientAddress: '',
@@ -409,9 +412,9 @@ export default function InvoicesPage() {
       description: `Le brouillon a été converti en facture ${newInvoice.id}`,
     });
   };
-
   const handleResetInvoice = () => {
     setNewInvoice({
+      id: '', // Ajoutez cette ligne pour satisfaire la signature de type
       clientName: '',
       clientPhone: '',
       clientAddress: '',
@@ -422,7 +425,7 @@ export default function InvoicesPage() {
       fees: 0,
       transport: 0,
       total: 0,
-      createdBy: '', // Ajoutez cette ligne
+      createdBy: '',
     });
     setSubtotal(0);
     setFees(0);
