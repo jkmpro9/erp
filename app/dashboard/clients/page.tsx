@@ -67,20 +67,36 @@ export default function ClientsPage() {
   const [clientPayments, setClientPayments] = useState<Payment[]>([]);
   const [clientTransactions, setClientTransactions] = useState<Transaction[]>([]);
   const { toast } = useToast()
+  const [previousTab, setPreviousTab] = useState<string>('list');
 
   useEffect(() => {
     const loadClients = async () => {
-      const storedClients = await localforage.getItem<Client[]>('clients');
-      if (storedClients) {
-        setClients(storedClients);
-      } else {
-        const initialClients = [
-          { id: 'CL001', name: 'Acme Corp', phone: '+243123456789', address: '123 Main St', city: 'Kinshasa' },
-          { id: 'CL002', name: 'GlobalTech', phone: '+243987654321', address: '456 Oak Ave', city: 'Lubumbashi' },
-          { id: 'CL003', name: 'InnovateNow', phone: '+243555123456', address: '789 Pine Rd', city: 'Goma' },
-        ];
-        await localforage.setItem('clients', initialClients);
-        setClients(initialClients);
+      try {
+        // Essayer de charger les clients depuis le stockage local
+        const storedClients = await localforage.getItem<Client[]>('clients');
+        
+        if (storedClients && storedClients.length > 0) {
+          // Si des clients sont stockés localement, les utiliser
+          setClients(storedClients);
+        } else {
+          // Si aucun client n'est stocké localement, simuler un appel API
+          // Dans une vraie application, vous remplaceriez ceci par un vrai appel API
+          const response = await fetch('/api/clients');
+          if (!response.ok) {
+            throw new Error('Erreur lors du chargement des clients');
+          }
+          const clientsData = await response.json();
+          setClients(clientsData);
+          // Stocker les clients récupérés localement
+          await localforage.setItem('clients', clientsData);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des clients:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger la liste des clients. Veuillez réessayer plus tard.",
+          variant: "destructive",
+        });
       }
     };
 
@@ -109,7 +125,11 @@ export default function ClientsPage() {
     setClients(updatedClients);
     await localforage.setItem('clients', updatedClients);
     setNewClient({ name: '', phone: '+243', address: '', city: '' });
-    toast({ message: `Client ajouté: ${clientToAdd.name} a été ajouté avec succès.`, type: 'foreground' });
+    toast({
+      title: "Succès",
+      description: `Client ajouté: ${clientToAdd.name} a été ajouté avec succès.`,
+      variant: "default",
+    });
     setActiveTab('list');
   };
 
@@ -139,7 +159,11 @@ export default function ClientsPage() {
     );
     setClients(updatedClients);
     await localforage.setItem('clients', updatedClients);
-    toast(`Client mis à jour: ${editingClient.name} a été mis à jour avec succès.`);
+    toast({
+      title: "Succès",
+      description: `Client mis à jour: ${editingClient.name} a été mis à jour avec succès.`,
+      variant: "default",
+    });
     setEditingClient(null);
     setActiveTab('list');
   };
@@ -192,6 +216,15 @@ export default function ClientsPage() {
     setActiveTab('details');
   };
 
+  const handleTabChange = (newTab: string) => {
+    setPreviousTab(activeTab);
+    setActiveTab(newTab);
+  };
+
+  const handleBack = () => {
+    setActiveTab(previousTab);
+  };
+
   return (
     <div className={`container mx-auto p-4 ${inter.className}`}>
       <h1 className="text-3xl font-bold mb-6">Gestion des Clients</h1>
@@ -205,21 +238,21 @@ export default function ClientsPage() {
                 <Button
                   variant={activeTab === 'list' ? 'default' : 'ghost'}
                   className="w-full justify-start text-base"
-                  onClick={() => setActiveTab('list')}
+                  onClick={() => handleTabChange('list')}
                 >
                   Liste des Clients
                 </Button>
                 <Button
                   variant={activeTab === 'add' ? 'default' : 'ghost'}
                   className="w-full justify-start text-base"
-                  onClick={() => setActiveTab('add')}
+                  onClick={() => handleTabChange('add')}
                 >
                   Ajouter un Client
                 </Button>
                 <Button
                   variant={activeTab === 'stats' ? 'default' : 'ghost'}
                   className="w-full justify-start text-base"
-                  onClick={() => setActiveTab('stats')}
+                  onClick={() => handleTabChange('stats')}
                 >
                   Statistiques
                 </Button>
@@ -230,6 +263,16 @@ export default function ClientsPage() {
 
         {/* Main content area */}
         <div className="flex-1">
+          {activeTab !== 'list' && (
+            <Button
+              variant="outline"
+              className="mb-4"
+              onClick={handleBack}
+            >
+              Retour
+            </Button>
+          )}
+
           {activeTab === 'list' && (
             <Card className="shadow-md">
               <CardHeader>
