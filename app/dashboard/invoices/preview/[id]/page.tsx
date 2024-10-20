@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { PDFViewer, Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import InvoiceCalculator from '@/components/SomeComponent';
+import { getBase64FromUrl } from '@/utils/imageUtils';
+import { DEFAULT_IMAGE } from '@/constants';
 
 // Register fonts (you'll need to add these font files to your project)
 Font.register({
@@ -282,27 +284,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// Ajoutez cette constante pour une image par défaut
-const DEFAULT_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-
-// Fonction améliorée pour convertir une URL d'image en base64
-const getBase64FromUrl = async (url: string): Promise<string> => {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.error('Error fetching image:', error);
-    return DEFAULT_IMAGE; // Retourne l'image par défaut en cas d'erreur
-  }
-}
-
 function getInvoice(id: string) {
   // Dans une vraie application, vous récupéreriez ces données depuis une API
   return {
@@ -327,6 +308,7 @@ const InvoicePreviewPage: React.FC = () => {
   const params = useParams();
   const [invoice, setInvoice] = useState<any>(null);
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const imageCache = useRef<Record<string, string>>({});
 
   useEffect(() => {
     const loadInvoiceAndImages = async () => {
@@ -335,33 +317,30 @@ const InvoicePreviewPage: React.FC = () => {
         const parsedInvoice = JSON.parse(storedInvoice);
         console.log('Parsed invoice:', parsedInvoice);
         
-        // Convertir toutes les URLs d'images en base64
         const itemsWithBase64Images = await Promise.all(
-          parsedInvoice.items.map(async (item: any) => {
-            console.log('Processing item:', item); // Ajoutez ce log pour voir la structure de chaque item
-            const imageUrl = item.imageUrl || item.image || item.img || DEFAULT_IMAGE; // Ajout de 'img' comme autre possibilité
-            console.log('Processing image URL:', imageUrl);
+          parsedInvoice.items.map(async (item: any, index: number) => {
+            console.log(`Processing item ${index}:`, item);
+            const imageUrl = item.imageUrl || DEFAULT_IMAGE;
+            console.log(`Image URL for item ${index}:`, imageUrl);
             try {
               const base64Image = await getBase64FromUrl(imageUrl);
-              console.log('Base64 image loaded:', !!base64Image);
+              console.log(`Base64 image loaded for item ${index}:`, base64Image.slice(0, 50) + '...');
               return { ...item, imageUrl: base64Image };
             } catch (error) {
-              console.error('Error loading image:', error);
+              console.error(`Error loading image for item ${index}:`, error);
               return { ...item, imageUrl: DEFAULT_IMAGE };
             }
           })
         );
 
-        setInvoice({
-          ...parsedInvoice,
-          items: itemsWithBase64Images,
-        });
+        console.log('Items with base64 images:', itemsWithBase64Images);
+        setInvoice({ ...parsedInvoice, items: itemsWithBase64Images });
         setImagesLoaded(true);
       }
     };
 
     loadInvoiceAndImages();
-  }, [params.id]);
+  }, []);
 
   if (!invoice || !imagesLoaded) {
     return <div>Chargement...</div>;
@@ -473,7 +452,18 @@ const InvoicePreviewPage: React.FC = () => {
                 ]} key={index}>
                   <View style={styles.tableColSmall}><Text style={styles.tableCell}>{index + 1}</Text></View>
                   <View style={styles.tableColImage}>
-                    <Image src={item.imageUrl} style={styles.itemImage} />
+                    {item.imageUrl ? (
+                      <Image
+                        src={item.imageUrl}
+                        style={{
+                          width: 80,
+                          height: 80,
+                          objectFit: 'contain',
+                        }}
+                      />
+                    ) : (
+                      <Text>Image non disponible</Text>
+                    )}
                   </View>
                   <View style={styles.tableColSmall}><Text style={styles.tableCell}>{item.quantity}</Text></View>
                   <View style={styles.tableColLarge}>

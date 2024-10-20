@@ -1,5 +1,10 @@
+import { DEFAULT_IMAGE } from '@/constants';
+
 export const getBase64FromUrl = async (url: string): Promise<string> => {
   try {
+    if (url.startsWith('data:image')) {
+      return url; // L'URL est déjà une image en base64
+    }
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const blob = await response.blob();
@@ -11,6 +16,6 @@ export const getBase64FromUrl = async (url: string): Promise<string> => {
     });
   } catch (error) {
     console.error('Error fetching image:', error);
-    return ''; // Retournez une chaîne vide ou une image par défaut en cas d'erreur
+    return DEFAULT_IMAGE;
   }
 };

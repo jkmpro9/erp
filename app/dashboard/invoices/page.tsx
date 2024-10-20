@@ -11,12 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog"
-import { Link, Pencil, Trash, FileText, Search } from 'lucide-react';
+import { Link, Pencil, Trash, FileText, Search, X } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { toast } from '@/hooks/use-toast';
 import Papa from 'papaparse'; // Assurez-vous d'installer papaparse : npm install papaparse @types/papaparse
 import { getBase64FromUrl } from '@/utils/imageUtils'; // Assurez-vous d'avoir cette fonction utilitaire
+import { format } from 'date-fns';
 
 // Ajoutez cette ligne après les imports
 const DEFAULT_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
@@ -442,25 +443,14 @@ export default function InvoicesPage() {
         complete: async (result) => {
           const parsedData = result.data as string[][];
           // Ignorer la première ligne (en-têtes)
-          const items = await Promise.all(parsedData.slice(1).map(async (row) => {
-            let imageUrl = row[1];
-            try {
-              // Convertir l'URL de l'image en base64
-              const base64Image = await getBase64FromUrl(imageUrl);
-              imageUrl = base64Image;
-            } catch (error) {
-              console.error('Error loading image:', error);
-              imageUrl = DEFAULT_IMAGE; // Utilisez une image par défaut en cas d'erreur
-            }
-            return {
-              imageUrl: imageUrl,
-              quantity: parseInt(row[2].trim(), 10),
-              description: row[3],
-              unitPrice: parseFloat(row[4].replace('$', '').trim()),
-              weightCbm: parseFloat(row[5]),
-              total: parseFloat(row[6].replace('$', '').trim()),
-              itemLink: row[7]
-            };
+          const items = parsedData.slice(1).map((row) => ({
+            imageUrl: row[1], // Ceci est déjà une chaîne base64
+            quantity: parseInt(row[2].trim(), 10),
+            description: row[3],
+            unitPrice: parseFloat(row[4].replace('$', '').trim()),
+            weightCbm: parseFloat(row[5]),
+            total: parseFloat(row[6].replace('$', '').trim()),
+            itemLink: row[7]
           }));
 
           setNewInvoice(prevInvoice => ({
@@ -498,9 +488,9 @@ export default function InvoicesPage() {
   const handleCreateOrUpdateDraft = async () => {
     const currentDate = new Date().toISOString();
     if (isEditingDraft) {
-      // Mise à jour du brouillon existant
+      // Updating the existing draft
       const updatedDrafts = drafts.map(draft => 
-        draft.id === newInvoice.id ? { ...newInvoice, lastModified: currentDate } : draft
+        draft.id === newInvoice.id ? { ...draft, ...newInvoice, lastModified: currentDate } : draft
       );
       setDrafts(updatedDrafts);
       await localforage.setItem('drafts', updatedDrafts);
@@ -526,6 +516,21 @@ export default function InvoicesPage() {
     }
     setIsEditingDraft(false);
     handleResetInvoice();
+  };
+
+  const handleCancelInvoice = async (invoiceId: string) => {
+    const updatedInvoices = invoices.filter(invoice => invoice.id !== invoiceId);
+    setInvoices(updatedInvoices);
+    await localforage.setItem('invoices', updatedInvoices);
+    toast({
+      title: "Facture annulée",
+      description: "La facture a été annulée avec succès.",
+    });
+  };
+
+  const handleViewUserDetails = (userId: string) => {
+    // Rediriger vers la page de détails de l'utilisateur
+    router.push(`/dashboard/users/${userId}`);
   };
 
   return (
@@ -570,7 +575,7 @@ export default function InvoicesPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Liste des Factures</CardTitle>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-4 mt-4">
                   <div className="relative flex-1">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -596,11 +601,11 @@ export default function InvoicesPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID Facture</TableHead>
+                      <TableHead>ID</TableHead>
                       <TableHead>Nom du Client</TableHead>
                       <TableHead>Date de Création</TableHead>
                       <TableHead>Montant</TableHead>
-                      <TableHead>Cré Par</TableHead>
+                      <TableHead>Créé Par</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -609,9 +614,16 @@ export default function InvoicesPage() {
                       <TableRow key={invoice.id}>
                         <TableCell>{invoice.id}</TableCell>
                         <TableCell>{invoice.clientName}</TableCell>
-                        <TableCell>{invoice.creationDate}</TableCell>
+                        <TableCell>{format(new Date(invoice.creationDate), 'dd/MM/yyyy HH:mm')}</TableCell>
                         <TableCell>${invoice.amount.toFixed(2)}</TableCell>
-                        <TableCell>{invoice.createdBy}</TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="link" 
+                            onClick={() => handleViewUserDetails(invoice.createdBy)}
+                          >
+                            {invoice.createdBy}
+                          </Button>
+                        </TableCell>
                         <TableCell>
                           <Button variant="ghost" size="sm" onClick={() => handlePreviewPDF()}>
                             <FileText className="h-4 w-4" />
@@ -619,6 +631,27 @@ export default function InvoicesPage() {
                           <Button variant="ghost" size="sm" onClick={() => handleDownloadPDF()}>
                             <Link className="h-4 w-4" />
                           </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Êtes-vous sûr de vouloir annuler cette facture ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Cette action ne peut pas être annulée. Cela supprimera définitivement la facture.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleCancelInvoice(invoice.id)}>
+                                  Confirmer
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </TableCell>
                       </TableRow>
                     ))}

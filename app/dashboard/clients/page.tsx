@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { Inter } from 'next/font/google'
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -22,6 +23,31 @@ interface Client {
   phone: string;
   address: string;
   city: string;
+}
+
+interface Invoice {
+  id: string;
+  clientId: string;
+  date: string;
+  amount: number;
+  status: 'paid' | 'unpaid';
+}
+
+interface Payment {
+  id: string;
+  clientId: string;
+  date: string;
+  amount: number;
+  method: string;
+}
+
+interface Transaction {
+  id: string;
+  clientId: string;
+  date: string;
+  description: string;
+  amount: number;
+  type: 'credit' | 'debit';
 }
 
 export default function ClientsPage() {
@@ -36,6 +62,10 @@ export default function ClientsPage() {
     address: '',
     city: '',
   });
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [clientInvoices, setClientInvoices] = useState<Invoice[]>([]);
+  const [clientPayments, setClientPayments] = useState<Payment[]>([]);
+  const [clientTransactions, setClientTransactions] = useState<Transaction[]>([]);
   const { toast } = useToast()
 
   useEffect(() => {
@@ -148,6 +178,19 @@ export default function ClientsPage() {
   const statistics = calculateStatistics();
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+
+  const handleViewClientDetails = async (client: Client) => {
+    setSelectedClient(client);
+    // Charger les factures, paiements et transactions du client
+    const invoices = await localforage.getItem<Invoice[]>('invoices') || [];
+    const payments = await localforage.getItem<Payment[]>('payments') || [];
+    const transactions = await localforage.getItem<Transaction[]>('transactions') || [];
+
+    setClientInvoices(invoices.filter(invoice => invoice.clientId === client.id));
+    setClientPayments(payments.filter(payment => payment.clientId === client.id));
+    setClientTransactions(transactions.filter(transaction => transaction.clientId === client.id));
+    setActiveTab('details');
+  };
 
   return (
     <div className={`container mx-auto p-4 ${inter.className}`}>
@@ -416,6 +459,99 @@ export default function ClientsPage() {
                     </ResponsiveContainer>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'details' && selectedClient && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Détails du Client: {selectedClient.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="info">
+                  <TabsList>
+                    <TabsTrigger value="info">Informations</TabsTrigger>
+                    <TabsTrigger value="invoices">Factures</TabsTrigger>
+                    <TabsTrigger value="payments">Paiements</TabsTrigger>
+                    <TabsTrigger value="transactions">Transactions</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="info">
+                    <div className="space-y-2">
+                      <p><strong>Téléphone:</strong> {selectedClient.phone}</p>
+                      <p><strong>Adresse:</strong> {selectedClient.address}</p>
+                      <p><strong>Ville:</strong> {selectedClient.city}</p>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="invoices">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID Facture</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Montant</TableHead>
+                          <TableHead>Statut</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {clientInvoices.map(invoice => (
+                          <TableRow key={invoice.id}>
+                            <TableCell>{invoice.id}</TableCell>
+                            <TableCell>{invoice.date}</TableCell>
+                            <TableCell>${invoice.amount.toFixed(2)}</TableCell>
+                            <TableCell>{invoice.status}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TabsContent>
+                  <TabsContent value="payments">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID Paiement</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Montant</TableHead>
+                          <TableHead>Méthode</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {clientPayments.map(payment => (
+                          <TableRow key={payment.id}>
+                            <TableCell>{payment.id}</TableCell>
+                            <TableCell>{payment.date}</TableCell>
+                            <TableCell>${payment.amount.toFixed(2)}</TableCell>
+                            <TableCell>{payment.method}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TabsContent>
+                  <TabsContent value="transactions">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID Transaction</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead>Montant</TableHead>
+                          <TableHead>Type</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {clientTransactions.map(transaction => (
+                          <TableRow key={transaction.id}>
+                            <TableCell>{transaction.id}</TableCell>
+                            <TableCell>{transaction.date}</TableCell>
+                            <TableCell>{transaction.description}</TableCell>
+                            <TableCell>${transaction.amount.toFixed(2)}</TableCell>
+                            <TableCell>{transaction.type}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           )}
