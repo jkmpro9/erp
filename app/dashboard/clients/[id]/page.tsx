@@ -1,12 +1,19 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { supabase } from '@/utils/supabase';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useToast } from "@/components/ui/use-toast"
-import { FileText, CreditCard, RefreshCcw, Package } from 'lucide-react';
+import { useState, useEffect, useCallback } from "react";
+import { useParams } from "next/navigation";
+import { supabase } from "@/utils/supabase";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useToast } from "@/components/ui/use-toast";
+import { FileText, CreditCard, RefreshCcw, Package } from "lucide-react";
 
 interface Customer {
   id: string;
@@ -53,19 +60,15 @@ export default function ClientDetailsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
-  const [activeTab, setActiveTab] = useState('invoices');
+  const [activeTab, setActiveTab] = useState("invoices");
 
-  useEffect(() => {
-    if (params.id) fetchClientDetails();
-  }, [params.id]);
-
-  const fetchClientDetails = async () => {
+  const fetchClientDetails = useCallback(async () => {
     try {
       // Fetch customer details
       const { data: customerData, error: customerError } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('id', params.id)
+        .from("clients")
+        .select("*")
+        .eq("id", params?.id)
         .single();
 
       if (customerError) throw customerError;
@@ -73,59 +76,65 @@ export default function ClientDetailsPage() {
 
       // Fetch invoices
       const { data: invoicesData, error: invoicesError } = await supabase
-        .from('invoices')
-        .select('*')
-        .eq('clientId', params.id);
+        .from("invoices")
+        .select("*")
+        .eq("clientId", params?.id);
 
       if (invoicesError) throw invoicesError;
       setInvoices(invoicesData);
 
       // Fetch payments
       const { data: paymentsData, error: paymentsError } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('clientId', params.id);
+        .from("payments")
+        .select("*")
+        .eq("clientId", params?.id);
 
       if (paymentsError) throw paymentsError;
       setPayments(paymentsData);
 
       // Fetch transactions
-      const { data: transactionsData, error: transactionsError } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('clientId', params.id);
+      const { data: transactionsData, error: transactionsError } =
+        await supabase
+          .from("transactions")
+          .select("*")
+          .eq("clientId", params?.id);
 
       if (transactionsError) throw transactionsError;
       setTransactions(transactionsData);
 
       // Fetch packages
       const { data: packagesData, error: packagesError } = await supabase
-        .from('packages')
-        .select('*')
-        .eq('clientId', params.id);
+        .from("packages")
+        .select("*")
+        .eq("clientId", params?.id)
+        .single();
 
       if (packagesError) throw packagesError;
       setPackages(packagesData);
-
     } catch (error) {
-      console.error('Error fetching client details:', error);
+      console.error("Error fetching client details:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les détails du client. Veuillez réessayer.",
+        description:
+          "Impossible de charger les détails du client. Veuillez réessayer.",
         variant: "destructive",
       });
     }
-  };
+  }, [params?.id, toast]);
+
+  useEffect(() => {
+    if (params?.id) fetchClientDetails();
+  }, [fetchClientDetails, params?.id]);
 
   if (!customer) {
     return <div>Chargement...</div>;
   }
 
   const tabs = [
-    { id: 'invoices', label: 'Factures', icon: FileText },
-    { id: 'payments', label: 'Paiements', icon: CreditCard },
-    { id: 'transactions', label: 'Transactions', icon: RefreshCcw },
-    { id: 'packages', label: 'Colis', icon: Package },
+    { id: "invoices", label: "Factures", icon: FileText },
+    { id: "payments", label: "Paiements", icon: CreditCard },
+    { id: "transactions", label: "Transactions", icon: RefreshCcw },
+    { id: "packages", label: "Colis", icon: Package },
   ];
 
   return (
@@ -135,10 +144,18 @@ export default function ClientDetailsPage() {
           <CardTitle>Détails du Client: {customer.name}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p><strong>ID:</strong> {customer.custom_id}</p>
-          <p><strong>Téléphone:</strong> {customer.phone}</p>
-          <p><strong>Adresse:</strong> {customer.address}</p>
-          <p><strong>Ville:</strong> {customer.city}</p>
+          <p>
+            <strong>ID:</strong> {customer.custom_id}
+          </p>
+          <p>
+            <strong>Téléphone:</strong> {customer.phone}
+          </p>
+          <p>
+            <strong>Adresse:</strong> {customer.address}
+          </p>
+          <p>
+            <strong>Ville:</strong> {customer.city}
+          </p>
         </CardContent>
       </Card>
 
@@ -149,8 +166,8 @@ export default function ClientDetailsPage() {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center px-4 py-2 mx-2 rounded-full ${
               activeTab === tab.id
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-secondary hover:bg-secondary/80'
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary hover:bg-secondary/80"
             }`}
           >
             <tab.icon className="mr-2 h-4 w-4" />
@@ -161,13 +178,15 @@ export default function ClientDetailsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{tabs.find(tab => tab.id === activeTab)?.label}</CardTitle>
+          <CardTitle>
+            {tabs.find((tab) => tab.id === activeTab)?.label}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                {activeTab === 'invoices' && (
+                {activeTab === "invoices" && (
                   <>
                     <TableHead>ID</TableHead>
                     <TableHead>Date</TableHead>
@@ -175,7 +194,7 @@ export default function ClientDetailsPage() {
                     <TableHead>Statut</TableHead>
                   </>
                 )}
-                {activeTab === 'payments' && (
+                {activeTab === "payments" && (
                   <>
                     <TableHead>ID</TableHead>
                     <TableHead>Date</TableHead>
@@ -183,7 +202,7 @@ export default function ClientDetailsPage() {
                     <TableHead>Méthode</TableHead>
                   </>
                 )}
-                {activeTab === 'transactions' && (
+                {activeTab === "transactions" && (
                   <>
                     <TableHead>ID</TableHead>
                     <TableHead>Date</TableHead>
@@ -191,7 +210,7 @@ export default function ClientDetailsPage() {
                     <TableHead>Montant</TableHead>
                   </>
                 )}
-                {activeTab === 'packages' && (
+                {activeTab === "packages" && (
                   <>
                     <TableHead>ID</TableHead>
                     <TableHead>Date</TableHead>
@@ -202,38 +221,50 @@ export default function ClientDetailsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {activeTab === 'invoices' && invoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell>{invoice.id}</TableCell>
-                  <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
-                  <TableCell>{invoice.amount.toFixed(2)} $</TableCell>
-                  <TableCell>{invoice.status}</TableCell>
-                </TableRow>
-              ))}
-              {activeTab === 'payments' && payments.map((payment) => (
-                <TableRow key={payment.id}>
-                  <TableCell>{payment.id}</TableCell>
-                  <TableCell>{new Date(payment.date).toLocaleDateString()}</TableCell>
-                  <TableCell>{payment.amount.toFixed(2)} $</TableCell>
-                  <TableCell>{payment.method}</TableCell>
-                </TableRow>
-              ))}
-              {activeTab === 'transactions' && transactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>{transaction.id}</TableCell>
-                  <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
-                  <TableCell>{transaction.description}</TableCell>
-                  <TableCell>{transaction.amount.toFixed(2)} $</TableCell>
-                </TableRow>
-              ))}
-              {activeTab === 'packages' && packages.map((pkg) => (
-                <TableRow key={pkg.id}>
-                  <TableCell>{pkg.id}</TableCell>
-                  <TableCell>{new Date(pkg.date).toLocaleDateString()}</TableCell>
-                  <TableCell>{pkg.trackingNumber}</TableCell>
-                  <TableCell>{pkg.status}</TableCell>
-                </TableRow>
-              ))}
+              {activeTab === "invoices" &&
+                invoices.map((invoice) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell>{invoice.id}</TableCell>
+                    <TableCell>
+                      {new Date(invoice.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>{invoice.amount.toFixed(2)} $</TableCell>
+                    <TableCell>{invoice.status}</TableCell>
+                  </TableRow>
+                ))}
+              {activeTab === "payments" &&
+                payments.map((payment) => (
+                  <TableRow key={payment.id}>
+                    <TableCell>{payment.id}</TableCell>
+                    <TableCell>
+                      {new Date(payment.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>{payment.amount.toFixed(2)} $</TableCell>
+                    <TableCell>{payment.method}</TableCell>
+                  </TableRow>
+                ))}
+              {activeTab === "transactions" &&
+                transactions.map((transaction) => (
+                  <TableRow key={transaction.id}>
+                    <TableCell>{transaction.id}</TableCell>
+                    <TableCell>
+                      {new Date(transaction.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>{transaction.description}</TableCell>
+                    <TableCell>{transaction.amount.toFixed(2)} $</TableCell>
+                  </TableRow>
+                ))}
+              {activeTab === "packages" &&
+                packages.map((pkg) => (
+                  <TableRow key={pkg.id}>
+                    <TableCell>{pkg.id}</TableCell>
+                    <TableCell>
+                      {new Date(pkg.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>{pkg.trackingNumber}</TableCell>
+                    <TableCell>{pkg.status}</TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </CardContent>

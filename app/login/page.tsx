@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/utils/supabase';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import Link from 'next/link';
-import { Users, FileText, BarChart2, Settings } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/utils/supabase";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
+import { Users, FileText, BarChart2, Settings } from "lucide-react";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
@@ -22,9 +22,12 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       if (error) throw error;
-      router.push('/dashboard');
+      router.push("/dashboard");
     } catch (error: any) {
       setError(error.message);
     }
@@ -40,10 +43,17 @@ export default function Login() {
       <div className="w-full lg:w-1/2 p-8 flex flex-col justify-center">
         <div className="max-w-md w-full mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Connexion</h2>
-          <p className="text-gray-600 mb-8">Bienvenue ! Veuillez entrer vos identifiants.</p>
+          <p className="text-gray-600 mb-8">
+            Bienvenue ! Veuillez entrer vos identifiants.
+          </p>
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Email
+              </label>
               <Input
                 id="email"
                 type="email"
@@ -55,7 +65,12 @@ export default function Login() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mot de passe</label>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Mot de passe
+              </label>
               <Input
                 id="password"
                 type="password"
@@ -75,22 +90,36 @@ export default function Login() {
                   type="checkbox"
                   className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                <label
+                  htmlFor="remember-me"
+                  className="ml-2 block text-sm text-gray-900"
+                >
                   Se souvenir de moi
                 </label>
               </div>
               <div className="text-sm">
-                <a href="#" className="font-medium text-green-600 hover:text-green-500">
+                <a
+                  href="#"
+                  className="font-medium text-green-600 hover:text-green-500"
+                >
                   Mot de passe oublié ?
                 </a>
               </div>
             </div>
-            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">Se connecter</Button>
+            <Button
+              type="submit"
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              Se connecter
+            </Button>
           </form>
           <p className="mt-4 text-center text-sm text-gray-600">
-            Vous n'avez pas de compte ?{' '}
-            <Link href="/signup" className="font-medium text-green-600 hover:text-green-500">
-              S'inscrire
+            Vous n&apos;avez pas de compte ?{" "}
+            <Link
+              href="/signup"
+              className="font-medium text-green-600 hover:text-green-500"
+            >
+              S&apos;inscrire
             </Link>
           </p>
         </div>
@@ -98,23 +127,33 @@ export default function Login() {
 
       {/* Illustration Section */}
       <div className="hidden lg:flex lg:w-1/2 bg-green-100 flex-col items-center justify-center p-12">
-        <h2 className="text-3xl font-bold text-green-800 mb-8">Bienvenue sur CoBill CRM</h2>
+        <h2 className="text-3xl font-bold text-green-800 mb-8">
+          Bienvenue sur CoBill CRM
+        </h2>
         <div className="grid grid-cols-2 gap-12">
           <div className="flex flex-col items-center">
             <Users size={64} className="text-green-600 mb-4" />
-            <p className="text-center text-green-800 text-lg">Gérer les Clients</p>
+            <p className="text-center text-green-800 text-lg">
+              Gérer les Clients
+            </p>
           </div>
           <div className="flex flex-col items-center">
             <FileText size={64} className="text-green-600 mb-4" />
-            <p className="text-center text-green-800 text-lg">Créer des Factures</p>
+            <p className="text-center text-green-800 text-lg">
+              Créer des Factures
+            </p>
           </div>
           <div className="flex flex-col items-center">
             <BarChart2 size={64} className="text-green-600 mb-4" />
-            <p className="text-center text-green-800 text-lg">Suivre les Analyses</p>
+            <p className="text-center text-green-800 text-lg">
+              Suivre les Analyses
+            </p>
           </div>
           <div className="flex flex-col items-center">
             <Settings size={64} className="text-green-600 mb-4" />
-            <p className="text-center text-green-800 text-lg">Personnaliser les Paramètres</p>
+            <p className="text-center text-green-800 text-lg">
+              Personnaliser les Paramètres
+            </p>
           </div>
         </div>
       </div>
