@@ -115,7 +115,7 @@ export default function ClientDetailsPage() {
       console.error("Error fetching client details:", error);
       toast({
         title: "Erreur",
-        description:
+        content:
           "Impossible de charger les détails du client. Veuillez réessayer.",
         variant: "destructive",
       });

@@ -40,7 +40,7 @@ export default function ClientsPage() {
       console.error("Error loading clients:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les clients. Veuillez réessayer.",
+        content: "Impossible de charger les clients. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {
@@ -61,14 +61,14 @@ export default function ClientsPage() {
       setClients(clients.filter((client) => client.id !== id));
       toast({
         title: "Succès",
-        description: "Le client a été supprimé avec succès.",
+        content: "Le client a été supprimé avec succès.",
         variant: "default",
       });
     } catch (error) {
       console.error("Error deleting client:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de supprimer le client. Veuillez réessayer.",
+        content: "Impossible de supprimer le client. Veuillez réessayer.",
         variant: "destructive",
       });
     }
@@ -87,7 +87,7 @@ export default function ClientsPage() {
         setClients([...clients, data[0]]);
         toast({
           title: "Succès",
-          description: `Le client ${data[0].name} a été ajouté avec succès.`,
+          content: `Le client ${data[0].name} a été ajouté avec succès.`,
           variant: "default",
         });
         setActiveTab("list");
@@ -96,7 +96,7 @@ export default function ClientsPage() {
       console.error("Error adding client:", error);
       toast({
         title: "Erreur",
-        description: "Impossible d'ajouter le client. Veuillez réessayer.",
+        content: "Impossible d'ajouter le client. Veuillez réessayer.",
         variant: "destructive",
       });
     }
@@ -118,7 +118,7 @@ export default function ClientsPage() {
       );
       toast({
         title: "Succès",
-        description: `Le client ${updatedClient.name} a été mis à jour avec succès.`,
+        content: `Le client ${updatedClient.name} a été mis à jour avec succès.`,
         variant: "default",
       });
       setEditingClient(null);
@@ -127,8 +127,7 @@ export default function ClientsPage() {
       console.error("Error updating client:", error);
       toast({
         title: "Erreur",
-        description:
-          "Impossible de mettre à jour le client. Veuillez réessayer.",
+        content: "Impossible de mettre à jour le client. Veuillez réessayer.",
         variant: "destructive",
       });
     }
