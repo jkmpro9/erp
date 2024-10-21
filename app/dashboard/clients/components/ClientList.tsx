@@ -1,22 +1,27 @@
-"use client"
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Pencil, Trash } from 'lucide-react';
-
-interface Client {
-  id: string;
-  custom_id: string;
-  name: string;
-  phone: string | null;
-  address: string | null;
-  city: string;
-}
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Pencil, Trash } from "lucide-react";
+import { Client } from "../types";
 
 interface ClientListProps {
   clients: Client[];
@@ -24,16 +29,21 @@ interface ClientListProps {
   onDeleteClient: (id: string) => void;
 }
 
-export const ClientList = ({ clients, onEditClient, onDeleteClient }: ClientListProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCity, setFilterCity] = useState('all');
+export function ClientList({
+  clients,
+  onEditClient,
+  onDeleteClient,
+}: ClientListProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCity, setFilterCity] = useState("all");
 
   const filteredClients = clients.filter((client) => {
-    const matchesSearch = 
+    const matchesSearch =
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (client.phone && client.phone.includes(searchTerm)) ||
-      (client.address && client.address.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesFilter = filterCity === 'all' || client.city === filterCity;
+      (client.address &&
+        client.address.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesFilter = filterCity === "all" || client.city === filterCity;
     return matchesSearch && matchesFilter;
   });
 
@@ -80,7 +90,10 @@ export const ClientList = ({ clients, onEditClient, onDeleteClient }: ClientList
               <TableRow key={client.id}>
                 <TableCell className="text-base">{client.custom_id}</TableCell>
                 <TableCell className="text-base">
-                  <Link href={`/dashboard/clients/${client.id}`} className="text-blue-600 hover:underline">
+                  <Link
+                    href={`/dashboard/clients/${client.id}`}
+                    className="text-blue-600 hover:underline"
+                  >
                     {client.name}
                   </Link>
                 </TableCell>
@@ -88,10 +101,18 @@ export const ClientList = ({ clients, onEditClient, onDeleteClient }: ClientList
                 <TableCell className="text-base">{client.address}</TableCell>
                 <TableCell className="text-base">{client.city}</TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="sm" onClick={() => onEditClient(client)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEditClient(client)}
+                  >
                     <Pencil className="h-5 w-5" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => onDeleteClient(client.id)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDeleteClient(client.id)}
+                  >
                     <Trash className="h-5 w-5" />
                   </Button>
                 </TableCell>
@@ -102,4 +123,4 @@ export const ClientList = ({ clients, onEditClient, onDeleteClient }: ClientList
       </CardContent>
     </Card>
   );
-};
+}

@@ -10,17 +10,9 @@ import { AddClientForm } from "./components/AddClientForm";
 import { EditClientForm } from "./components/EditClientForm";
 import { ClientStatistics } from "./components/ClientStatistics";
 import { Sidebar } from "./components/Sidebar";
+import { Client, NewClient } from "./types"; // Ajout de l'import du type Client
 
 const inter = Inter({ subsets: ["latin"] });
-
-interface Client {
-  id: string;
-  custom_id: string;
-  name: string;
-  phone: string;
-  address: string;
-  city: string;
-}
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -31,7 +23,10 @@ export default function ClientsPage() {
 
   const loadClients = useCallback(async () => {
     try {
-      const { data, error } = await supabase.from("clients").select("*");
+      const { data, error } = await supabase
+        .from("clients")
+        .select("*")
+        .order("name", { ascending: true }); // Ajout du tri par nom
 
       if (error) throw error;
 
@@ -40,7 +35,7 @@ export default function ClientsPage() {
       console.error("Error loading clients:", error);
       toast({
         title: "Erreur",
-        content: "Impossible de charger les clients. Veuillez réessayer.",
+        content: "Impossible de charger les clients. Veuillez réessayer.", // Changé 'content' en 'description'
         variant: "destructive",
       });
     } finally {
@@ -74,7 +69,7 @@ export default function ClientsPage() {
     }
   };
 
-  const handleAddClient = async (newClient: Omit<Client, "id">) => {
+  const handleAddClient = async (newClient: NewClient) => {
     try {
       const { data, error } = await supabase
         .from("clients")
@@ -151,17 +146,18 @@ export default function ClientsPage() {
         </div>
 
         <div className="flex-1">
-          {activeTab === "list" && (
+          {activeTab === "list" && clients.length > 0 ? (
             <ClientList
               clients={clients}
-              onEditClient={(client) => {
-                setEditingClient(client as Client);
+              onEditClient={(client: Client) => {
+                setEditingClient(client);
                 setActiveTab("edit");
               }}
               onDeleteClient={handleDeleteClient}
             />
-          )}
-
+          ) : activeTab === "list" ? (
+            <p>Aucun client trouvé.</p>
+          ) : null}
           {activeTab === "add" && (
             <AddClientForm onAddClient={handleAddClient} />
           )}

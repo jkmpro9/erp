@@ -1,20 +1,27 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Overview } from "@/components/dashboard/overview"
-import { RecentSales } from "@/components/dashboard/recent-sales"
-import { supabase } from '@/utils/supabase'
-import { Users, FileText, Package, CreditCard } from 'lucide-react'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Overview } from "@/components/dashboard/overview";
+import { RecentSales } from "@/components/dashboard/recent-sales";
+import { supabase } from "@/utils/supabase";
+import { Users, FileText, Package, CreditCard } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface DashboardData {
-  totalRevenue: number
-  totalClients: number
-  totalInvoices: number
-  totalPackages: number
-  recentInvoices: any[]
-  recentClients: any[]
+  totalRevenue: number;
+  totalClients: number;
+  totalInvoices: number;
+  totalPackages: number;
+  recentInvoices: any[];
+  recentClients: any[];
 }
 
 export default function DashboardPage() {
@@ -25,42 +32,43 @@ export default function DashboardPage() {
     totalPackages: 0,
     recentInvoices: [],
     recentClients: [],
-  })
+  });
 
   useEffect(() => {
-    fetchDashboardData()
-  }, [])
+    fetchDashboardData();
+  }, []);
 
   const fetchDashboardData = async () => {
     const { data: clients, error: clientsError } = await supabase
-      .from('clients')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(5)
+      .from("clients")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(5);
 
     const { data: invoices, error: invoicesError } = await supabase
-      .from('invoices')
-      .select('*')
-      .order('date', { ascending: false })
-      .limit(5)
+      .from("invoices")
+      .select("*")
+      .order("date", { ascending: false })
+      .limit(5);
 
     const { count: totalClients } = await supabase
-      .from('clients')
-      .select('*', { count: 'exact', head: true })
+      .from("clients")
+      .select("*", { count: "exact", head: true });
 
     const { count: totalInvoices } = await supabase
-      .from('invoices')
-      .select('*', { count: 'exact', head: true })
+      .from("invoices")
+      .select("*", { count: "exact", head: true });
 
     const { count: totalPackages } = await supabase
-      .from('packages')
-      .select('*', { count: 'exact', head: true })
+      .from("packages")
+      .select("*", { count: "exact", head: true });
 
     const { data: totalRevenueData } = await supabase
-      .from('invoices')
-      .select('amount')
+      .from("invoices")
+      .select("amount");
 
-    const totalRevenue = totalRevenueData?.reduce((sum, invoice) => sum + invoice.amount, 0) || 0
+    const totalRevenue =
+      totalRevenueData?.reduce((sum, invoice) => sum + invoice.amount, 0) || 0;
 
     setDashboardData({
       totalRevenue,
@@ -69,8 +77,8 @@ export default function DashboardPage() {
       totalPackages: totalPackages || 0,
       recentInvoices: invoices || [],
       recentClients: clients || [],
-    })
-  }
+    });
+  };
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
@@ -80,13 +88,13 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Revenue
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${dashboardData.totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              ${dashboardData.totalRevenue.toFixed(2)}
+            </div>
             <p className="text-xs text-muted-foreground">
               +20.1% from last month
             </p>
@@ -94,13 +102,13 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Clients
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardData.totalClients}</div>
+            <div className="text-2xl font-bold">
+              {dashboardData.totalClients}
+            </div>
             <p className="text-xs text-muted-foreground">
               +180.1% from last month
             </p>
@@ -114,7 +122,9 @@ export default function DashboardPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardData.totalInvoices}</div>
+            <div className="text-2xl font-bold">
+              {dashboardData.totalInvoices}
+            </div>
             <p className="text-xs text-muted-foreground">
               +19% from last month
             </p>
@@ -128,7 +138,9 @@ export default function DashboardPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardData.totalPackages}</div>
+            <div className="text-2xl font-bold">
+              {dashboardData.totalPackages}
+            </div>
             <p className="text-xs text-muted-foreground">
               +201 since last hour
             </p>
@@ -173,7 +185,9 @@ export default function DashboardPage() {
                   <TableRow key={invoice.id}>
                     <TableCell>{invoice.id}</TableCell>
                     <TableCell>${invoice.amount.toFixed(2)}</TableCell>
-                    <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      {new Date(invoice.date).toLocaleDateString()}
+                    </TableCell>
                     <TableCell>{invoice.status}</TableCell>
                   </TableRow>
                 ))}
@@ -208,5 +222,5 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

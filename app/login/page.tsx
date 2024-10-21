@@ -38,15 +38,17 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-white">
       {/* Login Form Section */}
-      <div className="w-full lg:w-1/2 p-8 flex flex-col justify-center">
+      <div className="w-full lg:w-1/2 p-4 sm:p-6 md:p-8 flex flex-col justify-center">
         <div className="max-w-md w-full mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Connexion</h2>
-          <p className="text-gray-600 mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+            Connexion
+          </h2>
+          <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">
             Bienvenue ! Veuillez entrer vos identifiants.
           </p>
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
             <div>
               <label
                 htmlFor="email"
@@ -113,7 +115,7 @@ export default function Login() {
               Se connecter
             </Button>
           </form>
-          <p className="mt-4 text-center text-sm text-gray-600">
+          <p className="mt-4 text-center text-xs sm:text-sm text-gray-600">
             Vous n&apos;avez pas de compte ?{" "}
             <Link
               href="/signup"
@@ -126,32 +128,32 @@ export default function Login() {
       </div>
 
       {/* Illustration Section */}
-      <div className="hidden lg:flex lg:w-1/2 bg-green-100 flex-col items-center justify-center p-12">
-        <h2 className="text-3xl font-bold text-green-800 mb-8">
+      <div className="hidden lg:flex lg:w-1/2 bg-green-100 flex-col items-center justify-center p-8 lg:p-12">
+        <h2 className="text-2xl lg:text-3xl font-bold text-green-800 mb-6 lg:mb-8 text-center">
           Bienvenue sur CoBill CRM
         </h2>
-        <div className="grid grid-cols-2 gap-12">
+        <div className="grid grid-cols-2 gap-6 lg:gap-12">
           <div className="flex flex-col items-center">
-            <Users size={64} className="text-green-600 mb-4" />
-            <p className="text-center text-green-800 text-lg">
+            <Users size={48} className="text-green-600 mb-3 lg:mb-4" />
+            <p className="text-center text-green-800 text-sm lg:text-lg">
               Gérer les Clients
             </p>
           </div>
           <div className="flex flex-col items-center">
-            <FileText size={64} className="text-green-600 mb-4" />
-            <p className="text-center text-green-800 text-lg">
+            <FileText size={48} className="text-green-600 mb-3 lg:mb-4" />
+            <p className="text-center text-green-800 text-sm lg:text-lg">
               Créer des Factures
             </p>
           </div>
           <div className="flex flex-col items-center">
-            <BarChart2 size={64} className="text-green-600 mb-4" />
-            <p className="text-center text-green-800 text-lg">
+            <BarChart2 size={48} className="text-green-600 mb-3 lg:mb-4" />
+            <p className="text-center text-green-800 text-sm lg:text-lg">
               Suivre les Analyses
             </p>
           </div>
           <div className="flex flex-col items-center">
-            <Settings size={64} className="text-green-600 mb-4" />
-            <p className="text-center text-green-800 text-lg">
+            <Settings size={48} className="text-green-600 mb-3 lg:mb-4" />
+            <p className="text-center text-green-800 text-sm lg:text-lg">
               Personnaliser les Paramètres
             </p>
           </div>

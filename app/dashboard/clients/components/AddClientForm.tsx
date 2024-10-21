@@ -1,41 +1,40 @@
-"use client"
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from "@/components/ui/label"
-
-interface NewClient {
-  name: string;
-  phone: string;
-  address: string;
-  city: string;
-  custom_id: string;
-}
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { NewClient } from "../types";
 
 interface AddClientFormProps {
   onAddClient: (client: NewClient) => Promise<void>;
 }
 
-export const AddClientForm = ({ onAddClient }: AddClientFormProps) => {
+export function AddClientForm({ onAddClient }: AddClientFormProps) {
   const [newClient, setNewClient] = useState<NewClient>({
-    name: '',
-    phone: '+243',
-    address: '',
-    city: '',
-    custom_id: '',
+    name: "",
+    phone: "+243",
+    address: "",
+    city: "",
+    email: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setNewClient(prev => ({ ...prev, [name]: value }));
+    setNewClient((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onAddClient(newClient);
-    setNewClient({ name: '', phone: '+243', address: '', city: '', custom_id: '' });
+    setNewClient({
+      name: "",
+      phone: "+243",
+      address: "",
+      city: "",
+      email: "",
+    });
   };
 
   return (
@@ -46,7 +45,9 @@ export const AddClientForm = ({ onAddClient }: AddClientFormProps) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-base">Nom</Label>
+            <Label htmlFor="name" className="text-base">
+              Nom
+            </Label>
             <Input
               id="name"
               name="name"
@@ -57,7 +58,9 @@ export const AddClientForm = ({ onAddClient }: AddClientFormProps) => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone" className="text-base">Numéro de téléphone</Label>
+            <Label htmlFor="phone" className="text-base">
+              Numéro de téléphone
+            </Label>
             <Input
               id="phone"
               name="phone"
@@ -68,7 +71,9 @@ export const AddClientForm = ({ onAddClient }: AddClientFormProps) => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="city" className="text-base">Ville</Label>
+            <Label htmlFor="city" className="text-base">
+              Ville
+            </Label>
             <Input
               id="city"
               name="city"
@@ -79,7 +84,9 @@ export const AddClientForm = ({ onAddClient }: AddClientFormProps) => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="address" className="text-base">Adresse</Label>
+            <Label htmlFor="address" className="text-base">
+              Adresse
+            </Label>
             <Input
               id="address"
               name="address"
@@ -89,9 +96,11 @@ export const AddClientForm = ({ onAddClient }: AddClientFormProps) => {
               className="text-base"
             />
           </div>
-          <Button type="submit" className="text-base">Ajouter le Client</Button>
+          <Button type="submit" className="text-base">
+            Ajouter le Client
+          </Button>
         </form>
       </CardContent>
     </Card>
   );
-};
+}

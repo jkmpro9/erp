@@ -1,19 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from "@/components/ui/label"
-
-interface Client {
-  id: string;
-  custom_id: string;
-  name: string;
-  phone: string;
-  address: string;
-  city: string;
-}
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Client } from "../types";
 
 interface EditClientFormProps {
   client: Client;
@@ -21,7 +13,11 @@ interface EditClientFormProps {
   onCancel: () => void;
 }
 
-export const EditClientForm = ({ client, onUpdateClient, onCancel }: EditClientFormProps) => {
+export function EditClientForm({
+  client,
+  onUpdateClient,
+  onCancel,
+}: EditClientFormProps) {
   const [editingClient, setEditingClient] = useState<Client>(client);
 
   useEffect(() => {
@@ -30,7 +26,7 @@ export const EditClientForm = ({ client, onUpdateClient, onCancel }: EditClientF
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEditingClient(prev => ({ ...prev, [name]: value }));
+    setEditingClient((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,7 +42,9 @@ export const EditClientForm = ({ client, onUpdateClient, onCancel }: EditClientF
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-base">Nom</Label>
+            <Label htmlFor="name" className="text-base">
+              Nom
+            </Label>
             <Input
               id="name"
               name="name"
@@ -57,7 +55,9 @@ export const EditClientForm = ({ client, onUpdateClient, onCancel }: EditClientF
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone" className="text-base">Numéro de téléphone</Label>
+            <Label htmlFor="phone" className="text-base">
+              Numéro de téléphone
+            </Label>
             <Input
               id="phone"
               name="phone"
@@ -68,7 +68,9 @@ export const EditClientForm = ({ client, onUpdateClient, onCancel }: EditClientF
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="city" className="text-base">Ville</Label>
+            <Label htmlFor="city" className="text-base">
+              Ville
+            </Label>
             <Input
               id="city"
               name="city"
@@ -79,7 +81,9 @@ export const EditClientForm = ({ client, onUpdateClient, onCancel }: EditClientF
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="address" className="text-base">Adresse</Label>
+            <Label htmlFor="address" className="text-base">
+              Adresse
+            </Label>
             <Input
               id="address"
               name="address"
@@ -90,8 +94,15 @@ export const EditClientForm = ({ client, onUpdateClient, onCancel }: EditClientF
             />
           </div>
           <div className="flex space-x-2">
-            <Button type="submit" className="text-base">Mettre à jour le Client</Button>
-            <Button type="button" variant="outline" className="text-base" onClick={onCancel}>
+            <Button type="submit" className="text-base">
+              Mettre à jour le Client
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="text-base"
+              onClick={onCancel}
+            >
               Annuler
             </Button>
           </div>
@@ -99,4 +110,4 @@ export const EditClientForm = ({ client, onUpdateClient, onCancel }: EditClientF
       </CardContent>
     </Card>
   );
-};
+}
