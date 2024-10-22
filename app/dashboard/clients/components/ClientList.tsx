@@ -27,12 +27,18 @@ interface ClientListProps {
   clients: Client[];
   onEditClient: (client: Client) => void;
   onDeleteClient: (id: string) => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
 export function ClientList({
   clients,
   onEditClient,
   onDeleteClient,
+  currentPage,
+  totalPages,
+  onPageChange,
 }: ClientListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCity, setFilterCity] = useState("all");
@@ -120,6 +126,23 @@ export function ClientList({
             ))}
           </TableBody>
         </Table>
+        <div className="flex justify-between items-center mt-4">
+          <Button
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Précédent
+          </Button>
+          <span>
+            Page {currentPage} sur {totalPages}
+          </span>
+          <Button
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Suivant
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

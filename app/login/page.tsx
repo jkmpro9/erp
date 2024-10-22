@@ -13,6 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -21,15 +22,24 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    console.log("Début de la tentative de connexion avec:", email);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Appel à Supabase signInWithPassword");
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      console.log("Réponse de Supabase:", { data, error });
       if (error) throw error;
+      console.log("Connexion réussie, tentative de redirection");
       router.push("/dashboard");
     } catch (error: any) {
+      console.error("Erreur détaillée de connexion:", error);
       setError(error.message);
+    } finally {
+      setIsLoading(false);
+      console.log("Fin de la tentative de connexion");
     }
   };
 
@@ -111,8 +121,9 @@ export default function Login() {
             <Button
               type="submit"
               className="w-full bg-green-600 hover:bg-green-700"
+              disabled={isLoading}
             >
-              Se connecter
+              {isLoading ? "Connexion en cours..." : "Se connecter"}
             </Button>
           </form>
           <p className="mt-4 text-center text-xs sm:text-sm text-gray-600">

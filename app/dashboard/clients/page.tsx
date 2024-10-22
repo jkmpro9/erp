@@ -14,38 +14,53 @@ import { Client, NewClient } from "./types"; // Ajout de l'import du type Client
 
 const inter = Inter({ subsets: ["latin"] });
 
+const ITEMS_PER_PAGE = 10;
+
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [activeTab, setActiveTab] = useState("list");
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const { toast } = useToast();
 
-  const loadClients = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from("clients")
-        .select("*")
-        .order("name", { ascending: true }); // Ajout du tri par nom
+  const loadClients = useCallback(
+    async (page: number) => {
+      try {
+        const { data, error, count } = await supabase
+          .from("clients")
+          .select("*", { count: "exact" })
+          .range((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE - 1)
+          .order("name", { ascending: true });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setClients(data || []);
-    } catch (error) {
-      console.error("Error loading clients:", error);
-      toast({
-        title: "Erreur",
-        content: "Impossible de charger les clients. Veuillez réessayer.", // Changé 'content' en 'description'
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoaded(true);
-    }
-  }, [toast]);
+        setClients(data || []);
+        if (count) {
+          setTotalPages(Math.ceil(count / ITEMS_PER_PAGE));
+        }
+      } catch (error) {
+        console.error("Error loading clients:", error);
+        toast({
+          title: "Erreur",
+          content: "Impossible de charger les clients. Veuillez réessayer.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoaded(true);
+      }
+    },
+    [toast]
+  );
 
   useEffect(() => {
-    loadClients();
-  }, [loadClients]);
+    loadClients(currentPage);
+  }, [loadClients, currentPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const handleDeleteClient = async (id: string) => {
     try {
@@ -154,6 +169,9 @@ export default function ClientsPage() {
                 setActiveTab("edit");
               }}
               onDeleteClient={handleDeleteClient}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
             />
           ) : activeTab === "list" ? (
             <p>Aucun client trouvé.</p>
