@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthContext } from "@/components/AuthProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Overview } from "@/components/dashboard/overview";
 import { RecentSales } from "@/components/dashboard/recent-sales";
@@ -16,12 +18,20 @@ interface DashboardData {
 }
 
 export default function DashboardPage() {
+  const { session, loading } = useAuthContext();
+  const router = useRouter();
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     totalClients: 0,
     totalInvoices: 0,
     totalRevenue: 0,
     recentClients: [],
   });
+
+  useEffect(() => {
+    if (!loading && !session) {
+      router.push("/login");
+    }
+  }, [session, loading, router]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -78,6 +88,14 @@ export default function DashboardPage() {
       );
     }
   };
+
+  if (loading) {
+    return <div>Chargement...</div>;
+  }
+
+  if (!session) {
+    return null; // Cela ne devrait pas être rendu car l'utilisateur sera redirigé
+  }
 
   return (
     <div className="flex-col md:flex">
