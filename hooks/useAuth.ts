@@ -1,41 +1,46 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase";
-import { Session } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 
-export function useAuth() {
+export const useAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function getInitialSession() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      // only update the react state if the component is still mounted
-      if (mounted) {
-        if (session) {
-          setSession(session);
-        }
-        setLoading(false);
-      }
-    }
-
-    getInitialSession();
-
+    console.log("useAuth effect running");
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed", _event, session);
       setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
 
-    return () => {
-      mounted = false;
-      subscription?.unsubscribe();
-    };
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check", session);
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  return { session, loading };
-}
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  };
+
+  return { session, user, loading, signIn, signOut };
+};

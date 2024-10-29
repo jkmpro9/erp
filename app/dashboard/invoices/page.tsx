@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import localforage from "@/lib/localForage";
@@ -46,7 +46,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { toast } from "@/hooks/use-toast";
+import { toast, useToast } from "@/components/ui/use-toast";
 import Papa from "papaparse"; // Assurez-vous d'installer papaparse : npm install papaparse @types/papaparse
 import { getBase64FromUrl } from "@/utils/imageUtils"; // Assurez-vous d'avoir cette fonction utilitaire
 import { format } from "date-fns";
@@ -453,7 +453,7 @@ export default function InvoicesPage() {
     if (!draft.clientName || draft.items.length === 0) {
       toast({
         title: "Erreur de validation",
-        description: "Le nom du client et au moins un article sont requis.",
+        content: "Le nom du client et au moins un article sont requis.",
         variant: "destructive",
       });
       return;
@@ -483,7 +483,7 @@ export default function InvoicesPage() {
 
     toast({
       title: "Brouillon converti",
-      description: `Le brouillon a été converti en facture ${newInvoice.id}`,
+      content: `Le brouillon a été converti en facture ${newInvoice.id}`,
     });
   };
   const handleResetInvoice = () => {
@@ -509,8 +509,7 @@ export default function InvoicesPage() {
     setTotalWeight(0);
     toast({
       title: "Nouvelle facture",
-      description:
-        "Le formulaire a été réinitialisé pour une nouvelle facture.",
+      content: "Le formulaire a été réinitialisé pour une nouvelle facture.",
     });
   };
 
@@ -542,7 +541,7 @@ export default function InvoicesPage() {
           setIsFileUploadOpen(false);
           toast({
             title: "Fichier chargé avec succès",
-            description: `${items.length} articles ont été ajoutés à la facture.`,
+            content: `${items.length} articles ont été ajoutés à la facture.`,
           });
         },
         header: false,
@@ -578,7 +577,7 @@ export default function InvoicesPage() {
       await localforage.setItem("drafts", updatedDrafts);
       toast({
         title: "Brouillon mis à jour",
-        description: "Le brouillon a été mis à jour avec succès.",
+        content: "Le brouillon a été mis à jour avec succès.",
       });
     } else {
       // Création d'un nouveau brouillon
@@ -593,7 +592,7 @@ export default function InvoicesPage() {
       await localforage.setItem("drafts", updatedDrafts);
       toast({
         title: "Brouillon créé",
-        description: "Un nouveau brouillon a été créé avec succès.",
+        content: "Un nouveau brouillon a été créé avec succès.",
       });
     }
     setIsEditingDraft(false);
@@ -608,7 +607,7 @@ export default function InvoicesPage() {
     await localforage.setItem("invoices", updatedInvoices);
     toast({
       title: "Facture annulée",
-      description: "La facture a été annulée avec succès.",
+      content: "La facture a été annulée avec succès.",
     });
   };
 

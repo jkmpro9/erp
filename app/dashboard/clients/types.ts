@@ -1,15 +1,31 @@
-import { ReactNode } from "react";
-
 export interface Client {
-  custom_id: string;
-  city: string;
-  address: string;
-  phone: string;
   id: string;
+  custom_id?: string;
   name: string;
-  email: string;
-
-  // Ajoutez ici les autres propriétés du client si nécessaire
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  created_at?: string;
 }
 
-export type NewClient = Omit<Client, "id" | "custom_id">;
+export interface NewClient {
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+}
+
+export interface ClientListProps {
+  clients: Client[];
+  onEditClient: (client: Client) => void;
+  onDeleteClient: (id: string) => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+export interface ClientStatisticsProps {
+  clients: Client[];
+}
